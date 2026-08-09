@@ -1,65 +1,55 @@
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
+const API_BASE_URL = "http://127.0.0.1:8000";
 
 /**
- * Common API request helper
+ * Generic API request helper
  */
 async function request(endpoint, options = {}) {
-  const config = {
-    method: "GET",
-    ...options,
-    headers: {
-      Accept: "application/json",
-      ...(options.body
-        ? { "Content-Type": "application/json" }
-        : {}),
-      ...(options.headers || {}),
-    },
-  };
+  const url = `${API_BASE_URL}${endpoint}`;
 
   let response;
 
   try {
-    response = await fetch(
-      `${API_BASE_URL}${endpoint}`,
-      config
-    );
+    response = await fetch(url, {
+      ...options,
+      headers: {
+        ...(options.body instanceof FormData
+          ? {}
+          : {
+              "Content-Type": "application/json",
+            }),
+        Accept: "application/json",
+        ...(options.headers || {}),
+      },
+    });
   } catch (error) {
     throw new Error(
-      "Unable to connect to the backend. Make sure the FastAPI server is running on http://127.0.0.1:8000."
+      "Cannot connect to FastAPI backend. Make sure it is running on http://127.0.0.1:8000"
     );
   }
 
-  let data = null;
+  const text = await response.text();
+
+  let data = {};
 
   try {
-    data = await response.json();
+    data = text ? JSON.parse(text) : {};
   } catch {
-    data = null;
+    data = {
+      detail: text || "Unknown server response",
+    };
   }
 
   if (!response.ok) {
-    let message = `Request failed with status ${response.status}`;
+    const error = new Error(
+      data?.detail ||
+        data?.message ||
+        `Backend request failed (${response.status})`
+    );
 
-    if (data?.detail) {
-      if (typeof data.detail === "string") {
-        message = data.detail;
-      } else {
-        message = JSON.stringify(data.detail);
-      }
-    } else if (data?.message) {
-      message =
-        typeof data.message === "string"
-          ? data.message
-          : JSON.stringify(data.message);
-    } else if (data?.error) {
-      message =
-        typeof data.error === "string"
-          ? data.error
-          : JSON.stringify(data.error);
-    }
+    error.status = response.status;
+    error.data = data;
 
-    throw new Error(message);
+    throw error;
   }
 
   return data;
@@ -67,74 +57,182 @@ async function request(endpoint, options = {}) {
 
 /* =========================================================
    HEALTH
-   ========================================================= */
+========================================================= */
 
-export async function healthCheck() {
+export async function checkHealth() {
   return request("/health");
 }
 
 /* =========================================================
-   START INTERVIEW
-   ========================================================= */
+   INTERVIEW HEALTH
+========================================================= */
 
-export async function startInterview({
-  candidate_id,
-  language = "English",
-}) {
-  return request("/api/interview/start", {
-    method: "POST",
-    body: JSON.stringify({
-      candidate_id,
-      language,
-    }),
-  });
+export async function interviewHealth() {
+  return request("/api/interview/health");
+}
+
+/* =========================================================
+   START INTERVIEW
+========================================================= */
+
+export async function startInterview(payload) {
+  /*
+   * Primary endpoint used by the current FastAPI project.
+   */
+  try {
+    return await request("/api/interview/start", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  } catch (error) {
+    /*
+     * Some versions of the backend may expose the route
+     * without the /api prefix.
+     *
+     * Only retry on 404.
+     */
+    if (error.status !== 404) {
+      throw error;
+    }
+
+    try {
+      return await request("/interview/start", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+    } catch (secondError) {
+      if (secondError.status !== 404) {
+        throw secondError;
+      }
+
+      throw new Error(
+        "Interview start endpoint was not found. Please restart the FastAPI backend and make sure POST /api/interview/start is registered."
+      );
+    }
+  }
 }
 
 /* =========================================================
    SUBMIT ANSWER
-   ========================================================= */
+========================================================= */
 
-export async function submitAnswer({
-  session_id,
-  answer,
-}) {
-  return request("/api/interview/answer", {
-    method: "POST",
-    body: JSON.stringify({
-      session_id,
-      answer,
-    }),
-  });
+export async function submitAnswer(sessionId, answer) {
+  const payload = {
+    session_id: sessionId,
+    answer,
+  };
+
+  try {
+    return await request("/api/interview/answer", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  } catch (error) {
+    if (error.status !== 404) {
+      throw error;
+    }
+
+    return request("/interview/answer", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
 }
 
 /* =========================================================
-   GET INTERVIEW PLAN
-   ========================================================= */
+   INTERVIEW PLAN
+========================================================= */
 
 export async function getInterviewPlan(candidateId) {
-  return request(
-    `/api/interview/plan/${encodeURIComponent(candidateId)}`
-  );
+  return request(`/api/interview/plan/${encodeURIComponent(candidateId)}`);
 }
 
 /* =========================================================
-   GET SESSION
-   ========================================================= */
+   RESUME UPLOAD
+========================================================= */
 
-export async function getSession(sessionId) {
-  return request(
-    `/api/interview/session/${encodeURIComponent(sessionId)}`
-  );
+/*
+ * IMPORTANT:
+ *
+ * Resume upload is optional.
+ *
+ * The current backend may not have a dedicated
+ * /api/resume/upload endpoint.
+ *
+ * Therefore a missing resume endpoint will NOT prevent
+ * the candidate from starting the interview.
+ */
+
+const RESUME_UPLOAD_ENDPOINTS = [
+  "/api/resume/upload",
+  "/api/interview/resume/upload",
+  "/resume/upload",
+];
+
+export async function uploadResume(file, candidateId) {
+  if (!file) {
+    throw new Error("Please select a resume first.");
+  }
+
+  const extension = file.name.toLowerCase().split(".").pop();
+
+  const allowedExtensions = ["pdf", "doc", "docx"];
+
+  if (!allowedExtensions.includes(extension)) {
+    throw new Error("Only PDF, DOC and DOCX files are supported.");
+  }
+
+  let lastError = null;
+
+  for (const endpoint of RESUME_UPLOAD_ENDPOINTS) {
+    try {
+      const formData = new FormData();
+
+      formData.append("file", file);
+
+      if (candidateId) {
+        formData.append("candidate_id", candidateId);
+      }
+
+      return await request(endpoint, {
+        method: "POST",
+        body: formData,
+      });
+    } catch (error) {
+      lastError = error;
+
+      /*
+       * If the endpoint exists but has another problem,
+       * don't hide that actual error.
+       */
+      if (error.status !== 404) {
+        throw error;
+      }
+    }
+  }
+
+  /*
+   * The resume endpoint does not exist in the current backend.
+   * Return a controlled response instead of crashing the UI.
+   */
+  return {
+    success: false,
+    unavailable: true,
+    message:
+      "Resume upload endpoint is not available in the current backend.",
+    error: lastError?.message || "Resume endpoint not found",
+  };
 }
 
 /* =========================================================
    DEFAULT EXPORT
-   ========================================================= */
+========================================================= */
 
 export default {
-  healthCheck,
+  checkHealth,
+  interviewHealth,
   startInterview,
   submitAnswer,
   getInterviewPlan,
-  getSession,
+  uploadResume,
 };

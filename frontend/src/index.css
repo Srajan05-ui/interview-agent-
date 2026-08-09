@@ -1,7 +1,6 @@
 /* =========================================================
-   AI INTERVIEW AGENT
-   PROFESSIONAL GLOBAL STYLES
-   ========================================================= */
+   GLOBAL
+========================================================= */
 
 * {
   box-sizing: border-box;
@@ -10,14 +9,10 @@
 html,
 body,
 #root {
-  width: 100%;
-  min-height: 100%;
   margin: 0;
   padding: 0;
-}
-
-html {
-  background: #060a11;
+  min-height: 100%;
+  width: 100%;
 }
 
 body {
@@ -52,87 +47,155 @@ button:focus-visible,
 input:focus-visible,
 textarea:focus-visible,
 select:focus-visible {
-  outline: 2px solid #6d8cff;
+  outline: 2px solid #6f9cff;
   outline-offset: 2px;
 }
 
 
 /* =========================================================
    LANDING PAGE
-   ========================================================= */
+========================================================= */
 
-.app {
+.landing-page {
+  position: relative;
+
   min-height: 100vh;
+
+  overflow: hidden;
+
+  display: flex;
+  flex-direction: column;
 
   background:
     radial-gradient(
-      circle at 50% 0%,
-      rgba(76, 99, 170, 0.14),
+      circle at 50% -10%,
+      rgba(76, 115, 210, 0.16),
       transparent 38%
     ),
-    #070b12;
+    radial-gradient(
+      circle at 15% 60%,
+      rgba(40, 75, 145, 0.08),
+      transparent 30%
+    ),
+    #060a11;
 }
 
-.header {
-  height: 76px;
+
+/* =========================================================
+   BACKGROUND GLOWS
+========================================================= */
+
+.landing-glow {
+  position: absolute;
+
+  width: 500px;
+  height: 500px;
+
+  border-radius: 50%;
+
+  filter: blur(120px);
+
+  pointer-events: none;
+
+  opacity: 0.15;
+}
+
+.landing-glow-one {
+  top: -300px;
+  left: 50%;
+
+  transform: translateX(-50%);
+
+  background: #4169b4;
+}
+
+.landing-glow-two {
+  right: -350px;
+  bottom: -300px;
+
+  background: #1c4384;
+}
+
+
+/* =========================================================
+   LANDING HEADER
+========================================================= */
+
+.landing-header {
+  position: relative;
+  z-index: 2;
+
+  width: 100%;
 
   display: flex;
   align-items: center;
   justify-content: space-between;
 
-  padding: 0 48px;
+  padding: 24px 42px;
 
-  border-bottom:
-    1px solid rgba(148, 163, 184, 0.1);
+  border-bottom: 1px solid rgba(46, 61, 83, 0.5);
 
-  background:
-    rgba(7, 11, 18, 0.85);
+  background: rgba(6, 10, 17, 0.55);
 
-  backdrop-filter: blur(18px);
+  backdrop-filter: blur(14px);
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 11px;
+
+  gap: 12px;
 }
 
 .brand-mark {
-  width: 35px;
-  height: 35px;
+  width: 38px;
+  height: 38px;
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  place-items: center;
 
-  border-radius: 9px;
+  border: 1px solid #385895;
+
+  border-radius: 10px;
 
   background:
     linear-gradient(
-      135deg,
-      #718dff,
-      #526fc9
+      145deg,
+      #162b51,
+      #0d1728
     );
 
-  color: white;
+  color: #91b3ff;
 
   font-size: 12px;
   font-weight: 800;
+  letter-spacing: 0.5px;
 }
 
 .brand-name {
-  color: #e2e8f0;
+  color: #e9eef8;
 
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 700;
 }
 
-.cohort-status {
+.brand-subtitle {
+  margin-top: 2px;
+
+  color: #637188;
+
+  font-size: 10px;
+
+  letter-spacing: 0.5px;
+}
+
+.header-status {
   display: flex;
   align-items: center;
+
   gap: 8px;
 
-  color: #94a3b8;
+  color: #8d9bb0;
 
   font-size: 12px;
 }
@@ -143,139 +206,85 @@ select:focus-visible {
 
   border-radius: 50%;
 
-  background: #4ade80;
+  background: #45dc8a;
 
   box-shadow:
-    0 0 10px rgba(74, 222, 128, 0.55);
+    0 0 10px rgba(69, 220, 138, 0.55);
 }
 
-.hero-section {
-  min-height: calc(100vh - 76px);
 
-  display: flex;
-  justify-content: center;
+/* =========================================================
+   LANDING CONTENT
+========================================================= */
 
-  padding: 90px 24px 70px;
-}
+.landing-content {
+  position: relative;
+  z-index: 2;
 
-.hero-content {
-  width: 100%;
-  max-width: 980px;
+  width: min(900px, calc(100% - 40px));
+
+  margin: auto;
+
+  padding: 75px 0 65px;
 
   text-align: center;
 }
 
-.hero-badge,
-.setup-badge {
+.landing-eyebrow {
   display: inline-flex;
-  align-items: center;
 
-  padding: 8px 14px;
+  padding: 9px 17px;
 
-  border:
-    1px solid rgba(109, 140, 255, 0.35);
+  border: 1px solid #2b477d;
 
   border-radius: 999px;
 
-  background:
-    rgba(109, 140, 255, 0.08);
+  background: rgba(32, 57, 103, 0.16);
 
-  color: #9bb2ff;
+  color: #8eb2ff;
 
-  font-size: 10px;
-  font-weight: 700;
+  font-size: 11px;
+  font-weight: 800;
 
-  letter-spacing: 0.12em;
+  letter-spacing: 1.7px;
 }
 
-.hero-content h1 {
-  margin: 25px 0 20px;
+.landing-content h1 {
+  margin: 30px 0 23px;
 
-  color: #f8fafc;
+  color: #f7f9fc;
 
-  font-size: 64px;
-  line-height: 1.05;
+  font-size: clamp(46px, 7vw, 78px);
 
-  letter-spacing: -0.045em;
+  line-height: 1.02;
+
+  letter-spacing: -3.5px;
+
+  font-weight: 760;
 }
 
-.hero-content h1 span {
-  color: #7895ff;
+.landing-content h1 span {
+  color: #7ea6ff;
 }
 
-.hero-description {
-  max-width: 680px;
+.landing-description {
+  max-width: 650px;
 
   margin: 0 auto;
 
-  color: #8794a9;
+  color: #8997aa;
 
-  font-size: 15px;
+  font-size: 17px;
+
   line-height: 1.75;
 }
 
-.primary-button {
-  margin-top: 30px;
 
-  min-width: 220px;
+/* =========================================================
+   LANDING FEATURES
+========================================================= */
 
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 15px;
-
-  padding: 16px 24px;
-
-  border: none;
-  border-radius: 11px;
-
-  background: #f1f5f9;
-
-  color: #080d15;
-
-  font-weight: 700;
-
-  cursor: pointer;
-
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.primary-button:hover {
-  transform: translateY(-2px);
-
-  box-shadow:
-    0 14px 35px rgba(0, 0, 0, 0.25);
-}
-
-.topic-list {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-
-  gap: 8px;
-
-  margin-top: 30px;
-}
-
-.topic-list span,
-.setup-topics span {
-  padding: 7px 11px;
-
-  border:
-    1px solid #27344b;
-
-  border-radius: 7px;
-
-  background: #0d1522;
-
-  color: #7e8da5;
-
-  font-size: 10px;
-}
-
-.features {
+.landing-features {
   display: grid;
 
   grid-template-columns:
@@ -283,180 +292,678 @@ select:focus-visible {
 
   gap: 12px;
 
-  margin-top: 55px;
-
-  text-align: left;
+  margin: 40px 0 30px;
 }
 
-.feature-card {
+.landing-feature {
   display: flex;
+  align-items: center;
 
-  gap: 14px;
+  gap: 12px;
 
-  padding: 19px;
+  padding: 17px;
 
-  border:
-    1px solid rgba(148, 163, 184, 0.1);
+  text-align: left;
+
+  border: 1px solid #1f2c40;
 
   border-radius: 13px;
 
   background:
-    rgba(12, 19, 31, 0.75);
+    linear-gradient(
+      145deg,
+      rgba(15, 24, 38, 0.9),
+      rgba(8, 14, 23, 0.9)
+    );
+
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease;
 }
 
-.feature-number {
-  color: #6f8cff;
+.landing-feature:hover {
+  transform: translateY(-2px);
 
-  font-size: 11px;
+  border-color: #314d80;
+}
+
+.feature-icon {
+  width: 38px;
+  height: 38px;
+
+  flex-shrink: 0;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 10px;
+
+  background: rgba(73, 111, 190, 0.13);
+
+  border: 1px solid #273c62;
+
+  color: #86aaff;
+
+  font-size: 10px;
   font-weight: 800;
 }
 
-.feature-card h3 {
-  margin: 0 0 7px;
+.landing-feature strong {
+  display: block;
 
-  font-size: 13px;
-}
-
-.feature-card p {
-  margin: 0;
-
-  color: #718096;
-
-  font-size: 11px;
-  line-height: 1.55;
-}
-
-
-/* =========================================================
-   CANDIDATE SETUP
-   ========================================================= */
-
-.setup-page {
-  min-height: 100vh;
-
-  display: flex;
-  justify-content: center;
-
-  padding: 75px 20px 50px;
-
-  background:
-    radial-gradient(
-      circle at 50% -10%,
-      rgba(63, 85, 148, 0.16),
-      transparent 40%
-    ),
-    #060a11;
-}
-
-.setup-container {
-  width: 100%;
-  max-width: 720px;
-
-  text-align: center;
-}
-
-.setup-title {
-  margin: 25px 0 15px;
-
-  color: #f8fafc;
-
-  font-size: 45px;
-  line-height: 1.1;
-
-  letter-spacing: -0.035em;
-}
-
-.setup-description {
-  max-width: 620px;
-
-  margin: 0 auto;
-
-  color: #8996a8;
-
-  font-size: 14px;
-  line-height: 1.7;
-}
-
-.candidate-profile,
-.interview-focus,
-.setup-card {
-  margin-top: 18px;
-
-  padding: 22px;
-
-  border:
-    1px solid rgba(148, 163, 184, 0.12);
-
-  border-radius: 15px;
-
-  background:
-    linear-gradient(
-      145deg,
-      rgba(17, 24, 39, 0.96),
-      rgba(10, 15, 25, 0.96)
-    );
-
-  text-align: left;
-}
-
-.section-label,
-.panel-eyebrow {
-  margin: 0;
-
-  color: #7e9cff;
-
-  font-size: 10px;
-  font-weight: 750;
-
-  letter-spacing: 0.14em;
-
-  text-transform: uppercase;
-}
-
-.candidate-profile h2 {
-  margin: 7px 0 4px;
-
-  font-size: 18px;
-}
-
-.candidate-role {
-  margin: 0;
-
-  color: #69778d;
+  color: #dce4f1;
 
   font-size: 12px;
 }
 
-.setup-topics {
-  display: flex;
-  flex-wrap: wrap;
+.landing-feature span {
+  display: block;
 
-  gap: 8px;
+  margin-top: 4px;
 
-  margin-top: 13px;
+  color: #69778c;
+
+  font-size: 10px;
+
+  line-height: 1.4;
 }
 
-.begin-interview-button {
-  width: 100%;
 
-  margin-top: 20px;
+/* =========================================================
+   LANDING BUTTON
+========================================================= */
 
-  padding: 16px;
+.landing-start-button {
+  width: min(100%, 500px);
 
   display: flex;
   align-items: center;
   justify-content: center;
 
-  gap: 12px;
+  gap: 14px;
 
-  border: none;
+  margin: 0 auto;
+
+  padding: 17px 24px;
+
+  border: 0;
+
+  border-radius: 13px;
+
+  background: #eef2f7;
+
+  color: #090e16;
+
+  font-size: 15px;
+  font-weight: 750;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.landing-start-button:hover {
+  background: #ffffff;
+
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 12px 35px rgba(0, 0, 0, 0.28);
+}
+
+.button-arrow {
+  font-size: 20px;
+}
+
+.landing-note {
+  margin-top: 13px;
+
+  color: #59667a;
+
+  font-size: 11px;
+}
+
+
+/* =========================================================
+   LANDING FOOTER
+========================================================= */
+
+.landing-footer {
+  position: relative;
+  z-index: 2;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  gap: 9px;
+
+  padding: 20px;
+
+  border-top: 1px solid rgba(38, 52, 72, 0.5);
+
+  color: #4f5c70;
+
+  font-size: 10px;
+}
+
+
+/* =========================================================
+   SETUP PAGE
+========================================================= */
+
+.setup-page {
+  min-height: 100vh;
+
+  position: relative;
+
+  background:
+    radial-gradient(
+      circle at 50% 0%,
+      rgba(59, 99, 184, 0.12),
+      transparent 35%
+    ),
+    #060a11;
+
+  color: #f8fafc;
+
+  padding: 45px 24px 80px;
+}
+
+
+/* =========================================================
+   BACK BUTTON
+========================================================= */
+
+.setup-back-button {
+  position: fixed;
+
+  top: 22px;
+  left: 28px;
+
+  z-index: 20;
+
+  display: inline-flex;
+  align-items: center;
+
+  gap: 7px;
+
+  padding: 9px 14px;
+
+  border: 1px solid #263750;
+
+  border-radius: 9px;
+
+  background: rgba(9, 15, 25, 0.9);
+
+  color: #a8b5c8;
+
+  font-size: 12px;
+
+  cursor: pointer;
+
+  transition: 0.2s ease;
+}
+
+.setup-back-button:hover {
+  color: white;
+
+  border-color: #587fc7;
+
+  transform: translateX(-2px);
+}
+
+
+/* =========================================================
+   SETUP HERO
+========================================================= */
+
+.setup-hero {
+  width: min(850px, 100%);
+
+  margin: 30px auto 45px;
+
+  text-align: center;
+}
+
+.setup-eyebrow {
+  display: inline-flex;
+
+  padding: 9px 16px;
+
+  border: 1px solid #294274;
+
+  border-radius: 999px;
+
+  background: rgba(30, 55, 105, 0.16);
+
+  color: #8caeff;
+
+  font-size: 11px;
+  font-weight: 800;
+
+  letter-spacing: 1.5px;
+}
+
+.setup-hero h1 {
+  margin: 28px 0 18px;
+
+  font-size: clamp(42px, 6vw, 68px);
+
+  line-height: 1.04;
+
+  letter-spacing: -3px;
+}
+
+.setup-hero h1 span {
+  color: #78a5ff;
+}
+
+.setup-hero p {
+  max-width: 640px;
+
+  margin: auto;
+
+  color: #8592a6;
+
+  font-size: 15px;
+
+  line-height: 1.7;
+}
+
+
+/* =========================================================
+   SETUP CONTAINER
+========================================================= */
+
+.setup-container {
+  width: min(880px, 100%);
+
+  margin: auto;
+}
+
+
+/* =========================================================
+   SETUP CARD
+========================================================= */
+
+.setup-card {
+  margin-bottom: 16px;
+
+  padding: 27px;
+
+  border: 1px solid #1e2b3e;
+
+  border-radius: 17px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(15, 23, 37, 0.97),
+      rgba(8, 14, 23, 0.97)
+    );
+
+  box-shadow:
+    0 12px 35px rgba(0, 0, 0, 0.16);
+}
+
+.section-label {
+  margin-bottom: 8px;
+
+  color: #7fa5ff;
+
+  font-size: 10px;
+  font-weight: 800;
+
+  letter-spacing: 1.7px;
+}
+
+.setup-card h2 {
+  margin: 0;
+
+  color: #edf2fa;
+
+  font-size: 19px;
+
+  letter-spacing: -0.3px;
+}
+
+.section-description {
+  margin: 9px 0 20px;
+
+  color: #7c899c;
+
+  font-size: 13px;
+
+  line-height: 1.65;
+}
+
+
+/* =========================================================
+   INPUT
+========================================================= */
+
+.field-label {
+  display: block;
+
+  margin: 19px 0 8px;
+
+  color: #b9c4d4;
+
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.setup-input {
+  width: 100%;
+
+  padding: 13px 14px;
+
+  border: 1px solid #293750;
+
+  border-radius: 10px;
+
+  background: #080e18;
+
+  color: #edf3fb;
+
+  font-size: 14px;
+
+  outline: none;
+
+  transition: 0.2s ease;
+}
+
+.setup-input::placeholder {
+  color: #56647a;
+}
+
+.setup-input:focus {
+  border-color: #628cf1;
+
+  box-shadow:
+    0 0 0 3px rgba(98, 140, 241, 0.1);
+}
+
+
+/* =========================================================
+   RESUME
+========================================================= */
+
+.resume-upload {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+
+  gap: 14px;
+
+  margin-top: 18px;
+
+  padding: 16px;
+
+  border: 1px dashed #34445d;
+
+  border-radius: 13px;
+
+  background: #080e18;
+
+  color: white;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  transition: 0.2s ease;
+}
+
+.resume-upload:hover {
+  border-color: #628cf1;
+
+  background: #0a1220;
+}
+
+.resume-icon {
+  width: 42px;
+  height: 42px;
+
+  flex-shrink: 0;
+
+  display: grid;
+  place-items: center;
+
+  border: 1px solid #293e67;
+
+  border-radius: 10px;
+
+  background: rgba(66, 105, 180, 0.12);
+
+  color: #80a8ff;
+
+  font-size: 20px;
+}
+
+.resume-upload-content {
+  min-width: 0;
+
+  flex: 1;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 5px;
+}
+
+.resume-upload-content strong {
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+
+  color: #dfe7f4;
+
+  font-size: 13px;
+}
+
+.resume-upload-content span {
+  color: #69778c;
+
+  font-size: 11px;
+}
+
+.resume-browse {
+  padding: 8px 12px;
+
+  border: 1px solid #2b3c57;
+
+  border-radius: 8px;
+
+  background: #111b2a;
+
+  color: #b6c4d8;
+
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.resume-message {
+  margin-top: 11px;
+
+  color: #62d89a;
+
+  font-size: 12px;
+}
+
+
+/* =========================================================
+   LANGUAGE CARDS
+========================================================= */
+
+.language-grid {
+  display: grid;
+
+  grid-template-columns: repeat(3, 1fr);
+
+  gap: 11px;
+
+  margin-top: 18px;
+}
+
+.language-card {
+  min-height: 96px;
+
+  padding: 16px;
+
+  border: 1px solid #27364e;
+
+  border-radius: 12px;
+
+  background: #080e18;
+
+  color: #f5f7fb;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.language-card:hover {
+  border-color: #4b70b3;
+
+  transform: translateY(-1px);
+}
+
+.language-card strong {
+  display: block;
+
+  margin-bottom: 7px;
+
+  font-size: 14px;
+}
+
+.language-card span {
+  display: block;
+
+  color: #75849a;
+
+  font-size: 11px;
+
+  line-height: 1.5;
+}
+
+.language-card.selected {
+  border-color: #6c96ff;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(58, 91, 160, 0.23),
+      rgba(15, 27, 48, 0.8)
+    );
+
+  box-shadow:
+    inset 0 0 0 1px rgba(108, 150, 255, 0.08);
+}
+
+
+/* =========================================================
+   TOPICS
+========================================================= */
+
+.topic-list {
+  display: flex;
+
+  flex-wrap: wrap;
+
+  gap: 8px;
+
+  margin-top: 17px;
+}
+
+.topic-list span {
+  padding: 7px 11px;
+
+  border: 1px solid #293850;
+
+  border-radius: 999px;
+
+  background: #09111d;
+
+  color: #8b9bb1;
+
+  font-size: 11px;
+}
+
+
+/* =========================================================
+   ERROR
+========================================================= */
+
+.setup-error {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 5px;
+
+  margin: 16px 0;
+
+  padding: 14px 16px;
+
+  border: 1px solid rgba(248, 113, 113, 0.3);
+
   border-radius: 11px;
 
-  background: #f1f5f9;
+  background: rgba(127, 29, 29, 0.13);
 
-  color: #090d14;
+  color: #f6a4a4;
 
-  font-weight: 700;
+  font-size: 12px;
+}
+
+.setup-error strong {
+  color: #fecaca;
+
+  font-size: 13px;
+}
+
+
+/* =========================================================
+   BEGIN BUTTON
+========================================================= */
+
+.begin-interview-button {
+  width: 100%;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 14px;
+
+  padding: 16px 20px;
+
+  border: none;
+
+  border-radius: 12px;
+
+  background: #eef2f7;
+
+  color: #080d15;
+
+  font-size: 15px;
+
+  font-weight: 750;
 
   cursor: pointer;
 
@@ -465,21 +972,183 @@ select:focus-visible {
     box-shadow 0.2s ease;
 }
 
-.begin-interview-button:hover {
+.begin-interview-button:hover:not(:disabled) {
   transform: translateY(-2px);
 
+  background: #ffffff;
+
   box-shadow:
-    0 12px 30px rgba(0, 0, 0, 0.25);
+    0 12px 30px rgba(0, 0, 0, 0.28);
 }
 
-.interview-meta-text {
-  margin-top: 10px;
+.begin-interview-button:disabled {
+  opacity: 0.5;
 
-  text-align: center;
+  cursor: not-allowed;
+}
 
-  color: #56647a;
+.setup-note {
+  margin: 12px 0 0;
+
+  color: #59677b;
 
   font-size: 11px;
+
+  text-align: center;
+}
+
+
+/* =========================================================
+   COMMON INTERVIEW ELEMENTS
+   These do not replace your InterviewUI layout.
+========================================================= */
+
+.interview-page {
+  min-height: 100vh;
+
+  background: #060a11;
+
+  color: #f8fafc;
+}
+
+.interview-header {
+  border-bottom: 1px solid #1b2637;
+
+  background: #080d15;
+}
+
+.interview-card {
+  border: 1px solid #202d40;
+
+  border-radius: 16px;
+
+  background: #0b121e;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 800px) {
+
+  .landing-header {
+    padding: 18px 20px;
+  }
+
+  .header-status {
+    display: none;
+  }
+
+  .landing-content {
+    padding-top: 55px;
+  }
+
+  .landing-content h1 {
+    font-size: 46px;
+
+    letter-spacing: -2px;
+  }
+
+  .landing-features {
+    grid-template-columns: 1fr;
+  }
+
+  .setup-page {
+    padding: 30px 15px 60px;
+  }
+
+  .setup-back-button {
+    position: static;
+
+    margin-bottom: 25px;
+  }
+
+  .setup-hero {
+    margin-top: 5px;
+  }
+
+  .setup-hero h1 {
+    font-size: 44px;
+
+    letter-spacing: -2px;
+  }
+
+  .language-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 500px) {
+
+  .landing-content {
+    width: calc(100% - 28px);
+  }
+
+  .landing-content h1 {
+    font-size: 39px;
+  }
+
+  .landing-description {
+    font-size: 14px;
+  }
+
+  .landing-feature {
+    padding: 14px;
+  }
+
+  .setup-card {
+    padding: 21px;
+  }
+
+  .resume-browse {
+    display: none;
+  }
+
+  .resume-upload {
+    align-items: flex-start;
+  }
+
+  .setup-hero h1 {
+    font-size: 38px;
+  }
+}
+/* =========================================================
+   PROFESSIONAL SETUP CONTROLS
+   ========================================================= */
+
+.setup-back-button {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 10px 16px;
+
+  border: 1px solid #263653;
+  border-radius: 10px;
+
+  background: #0b1220;
+  color: #c9d5ea;
+
+  font-size: 14px;
+  font-weight: 500;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.setup-back-button:hover {
+  background: #111b2e;
+  border-color: #527bd8;
+  transform: translateX(-2px);
 }
 
 
@@ -487,458 +1156,341 @@ select:focus-visible {
    RESUME UPLOAD
    ========================================================= */
 
-.resume-upload-area {
-  min-height: 180px;
-
-  display: flex;
-  flex-direction: column;
-
-  justify-content: center;
-  align-items: center;
-
-  padding: 25px;
-
-  border:
-    1px dashed #34445f;
-
-  border-radius: 14px;
-
-  background: #0a101b;
-
-  cursor: pointer;
-
-  text-align: center;
-
-  transition:
-    border-color 0.2s ease,
-    background 0.2s ease,
-    transform 0.2s ease;
-}
-
-.resume-upload-area:hover,
-.resume-upload-area.drag-active {
-  border-color: #6d8cff;
-
-  background:
-    rgba(76, 100, 173, 0.08);
-
-  transform: translateY(-1px);
-}
-
-.resume-upload-icon {
-  width: 48px;
-  height: 48px;
-
+.resume-upload-box {
   display: flex;
   align-items: center;
-  justify-content: center;
-
-  margin-bottom: 13px;
-
-  border-radius: 12px;
-
-  background:
-    rgba(109, 140, 255, 0.1);
-
-  border:
-    1px solid rgba(109, 140, 255, 0.2);
-
-  color: #8fa6ff;
-
-  font-size: 22px;
-}
-
-.resume-upload-area h3 {
-  margin: 0 0 7px;
-
-  color: #e8eef7;
-
-  font-size: 15px;
-}
-
-.resume-upload-area p {
-  margin: 0;
-
-  color: #68778d;
-
-  font-size: 12px;
-
-  line-height: 1.6;
-}
-
-.resume-upload-area p span {
-  color: #8da6ff;
-}
-
-.resume-file-types {
-  display: flex;
-
-  gap: 7px;
-
-  margin-top: 15px;
-}
-
-.resume-file-types span {
-  padding: 5px 8px;
-
-  border:
-    1px solid #27344b;
-
-  border-radius: 6px;
-
-  background: #111927;
-
-  color: #738198;
-
-  font-size: 10px;
-}
-
-.resume-selected {
-  display: flex;
-  align-items: center;
-
-  gap: 13px;
-
-  padding: 15px;
-
-  border:
-    1px solid #283650;
-
-  border-radius: 12px;
-
-  background: #0a101b;
-}
-
-.resume-file-icon {
-  width: 45px;
-  height: 45px;
-
-  flex-shrink: 0;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  border-radius: 9px;
-
-  background:
-    rgba(109, 140, 255, 0.1);
-
-  color: #91a7ff;
-
-  font-size: 10px;
-  font-weight: 800;
-}
-
-.resume-file-info {
-  flex: 1;
-
-  min-width: 0;
-}
-
-.resume-file-info h3 {
-  margin: 0 0 4px;
-
-  overflow: hidden;
-
-  text-overflow: ellipsis;
-
-  white-space: nowrap;
-
-  font-size: 13px;
-}
-
-.resume-file-info p {
-  margin: 0;
-
-  color: #69778c;
-
-  font-size: 10px;
-}
-
-.resume-remove-button {
-  padding: 7px 10px;
-
-  border:
-    1px solid #3a465c;
-
-  border-radius: 7px;
-
-  background: transparent;
-
-  color: #8c9aaf;
-
-  cursor: pointer;
-}
-
-.resume-remove-button:hover {
-  color: #fb7185;
-
-  border-color:
-    rgba(251, 113, 133, 0.35);
-}
-
-
-/* =========================================================
-   INTERVIEW PAGE
-   ========================================================= */
-
-.interview-page {
-  width: 100%;
-  min-height: 100vh;
-
-  display: flex;
-  flex-direction: column;
-
-  overflow: hidden;
-
-  background:
-    radial-gradient(
-      circle at 50% -20%,
-      rgba(63, 85, 148, 0.13),
-      transparent 40%
-    ),
-    #060a11;
-
-  color: #f8fafc;
-}
-
-
-/* =========================================================
-   INTERVIEW TOP BAR
-   ========================================================= */
-
-.interview-top-bar {
-  position: relative;
+  gap: 18px;
 
   width: 100%;
-  height: 68px;
+  min-height: 92px;
 
-  flex-shrink: 0;
+  padding: 18px;
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  box-sizing: border-box;
 
-  padding: 0 30px;
+  border: 1px dashed #314566;
+  border-radius: 16px;
 
-  border-bottom:
-    1px solid rgba(148, 163, 184, 0.1);
-
-  background:
-    rgba(7, 11, 18, 0.92);
-
-  backdrop-filter: blur(18px);
-
-  z-index: 30;
-}
-
-.interview-live-badge {
-  display: flex;
-  align-items: center;
-
-  gap: 8px;
-
-  color: #aab8ce;
-
-  font-size: 11px;
-  font-weight: 700;
-
-  letter-spacing: 0.1em;
-
-  text-transform: uppercase;
-}
-
-.recording-dot {
-  width: 7px;
-  height: 7px;
-
-  flex-shrink: 0;
-
-  border-radius: 50%;
-
-  background: #fb7185;
-
-  box-shadow:
-    0 0 11px rgba(251, 113, 133, 0.65);
-
-  animation:
-    interviewPulse 1.7s infinite;
-}
-
-@keyframes interviewPulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-
-  50% {
-    opacity: 0.4;
-  }
-}
-
-.language-badge {
-  position: absolute;
-
-  right: 30px;
-
-  top: 50%;
-
-  transform: translateY(-50%);
-
-  padding: 8px 12px;
-
-  border:
-    1px solid #273754;
-
-  border-radius: 8px;
-
-  background: #0c1422;
-
-  color: #9eb5f7;
-
-  font-size: 11px;
-  font-weight: 600;
-}
-
-
-/* =========================================================
-   OPTIONAL BACK BUTTON
-   ========================================================= */
-
-.interview-back-button {
-  position: absolute;
-
-  left: 30px;
-
-  top: 50%;
-
-  transform: translateY(-50%);
-
-  display: flex;
-  align-items: center;
-
-  gap: 8px;
-
-  padding: 8px 12px;
-
-  border:
-    1px solid #27344b;
-
-  border-radius: 8px;
-
-  background: #0c1420;
-
-  color: #94a3b8;
-
-  cursor: pointer;
-
-  font-size: 11px;
+  background: #090f1a;
 
   transition:
-    color 0.2s ease,
     border-color 0.2s ease,
     background 0.2s ease;
 }
 
-.interview-back-button:hover {
-  background: #121d2e;
-
-  border-color: #48608a;
-
-  color: #f8fafc;
+.resume-upload-box:hover {
+  border-color: #5d86e8;
+  background: #0c1422;
 }
 
-
-/* =========================================================
-   INTERVIEW MAIN
-   ========================================================= */
-
-.interview-main {
-  flex: 1;
-
-  min-height: 0;
-
-  display: grid;
-
-  grid-template-columns:
-    minmax(0, 1.12fr)
-    minmax(420px, 0.88fr);
-
-  gap: 18px;
-
-  padding: 20px 24px 24px;
-}
-
-
-/* =========================================================
-   CAMERA AREA
-   IMPORTANT:
-   Current InterviewUI uses video-area and
-   video-feed-placeholder.
-   ========================================================= */
-
-.video-area {
-  position: relative;
-
-  min-width: 0;
-  min-height: 0;
-
-  display: flex;
-  flex-direction: column;
-
-  overflow: hidden;
-
-  border:
-    1px solid rgba(148, 163, 184, 0.13);
-
-  border-radius: 17px;
-
-  background:
-    linear-gradient(
-      145deg,
-      rgba(13, 21, 34, 0.98),
-      rgba(7, 12, 21, 0.98)
-    );
-
-  box-shadow:
-    0 18px 45px rgba(0, 0, 0, 0.16);
-}
-
-.video-feed-placeholder {
-  position: relative;
-
-  width: 100%;
-
-  min-height: 500px;
-
-  flex: 1;
-
-  overflow: hidden;
+.resume-icon {
+  width: 52px;
+  height: 52px;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
-  background:
-    radial-gradient(
-      circle at center,
-      rgba(35, 52, 82, 0.22),
-      transparent 55%
-    ),
-    #080e18;
+  flex-shrink: 0;
+
+  border: 1px solid #35558c;
+  border-radius: 12px;
+
+  background: #101c31;
+
+  color: #7da7ff;
+
+  font-size: 28px;
+}
+
+.resume-information {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+
+  flex: 1;
+
+  min-width: 0;
+}
+
+.resume-information strong {
+  color: #e8edf7;
+
+  font-size: 15px;
+  font-weight: 600;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.resume-information span {
+  color: #7f8da6;
+
+  font-size: 13px;
+}
+
+.browse-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 92px;
+  height: 42px;
+
+  padding: 0 18px;
+
+  border: 1px solid #304566;
+  border-radius: 10px;
+
+  background: #111b2c;
+
+  color: #d7e1f2;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.browse-button:hover {
+  background: #17243a;
+  border-color: #5c83df;
+  transform: translateY(-1px);
+}
+
+.browse-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
 }
 
 
 /* =========================================================
-   ACTUAL WEBCAM
+   LANGUAGE OPTIONS
    ========================================================= */
 
-.webcam-video {
-  position: absolute;
+.language-grid {
+  display: grid;
 
-  inset: 0;
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
 
+  gap: 14px;
+
+  margin-top: 20px;
+}
+
+.language-option {
+  appearance: none;
+  -webkit-appearance: none;
+
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+
+  min-height: 112px;
+
+  padding: 22px;
+
+  border: 1px solid #273958;
+  border-radius: 15px;
+
+  background: #090f1a;
+
+  color: #e8edf7;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.language-option strong {
+  margin-bottom: 8px;
+
+  color: #eaf0fa;
+
+  font-size: 16px;
+  font-weight: 650;
+}
+
+.language-option span {
+  color: #8492aa;
+
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.language-option:hover {
+  border-color: #4d73c5;
+  background: #0d1626;
+  transform: translateY(-2px);
+}
+
+.language-option.selected {
+  border-color: #6d96f4;
+
+  background:
+    linear-gradient(
+      145deg,
+      #111d34,
+      #0b1322
+    );
+
+  box-shadow:
+    0 0 0 1px rgba(109, 150, 244, 0.15),
+    0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.language-option.selected strong {
+  color: #ffffff;
+}
+
+.language-option:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+
+/* =========================================================
+   TOPIC BUTTONS
+   ========================================================= */
+
+.topic-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.topic-list span {
+  display: inline-flex;
+  align-items: center;
+
+  min-height: 34px;
+
+  padding: 0 14px;
+
+  border: 1px solid #263957;
+  border-radius: 999px;
+
+  background: #0a111e;
+
+  color: #9aabc5;
+
+  font-size: 13px;
+}
+
+
+/* =========================================================
+   RESUME MESSAGE
+   ========================================================= */
+
+.resume-success {
+  margin-top: 12px;
+
+  color: #4ade9a;
+
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+
+/* =========================================================
+   SETUP ERROR
+   ========================================================= */
+
+.setup-error {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  margin-top: 18px;
+  padding: 16px 18px;
+
+  border: 1px solid #69333b;
+  border-radius: 12px;
+
+  background: #1a0d12;
+}
+
+.setup-error strong {
+  color: #ff9aa6;
+  font-size: 14px;
+}
+
+.setup-error span {
+  color: #d88993;
+  font-size: 13px;
+}
+
+
+/* =========================================================
+   BEGIN INTERVIEW BUTTON
+   ========================================================= */
+
+.begin-interview-button {
+  width: 100%;
+
+  min-height: 58px;
+
+  margin-top: 22px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+
+  border: 1px solid #dfe7f4;
+  border-radius: 14px;
+
+  background: #edf2f8;
+
+  color: #080d16;
+
+  font-size: 17px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.begin-interview-button:hover {
+  background: #ffffff;
+
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.25);
+}
+
+.begin-interview-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+
+/* =========================================================
+   INTERVIEW CAMERA
+   ========================================================= */
+
+.candidate-video {
   width: 100%;
   height: 100%;
 
@@ -946,730 +1498,113 @@ select:focus-visible {
 
   object-fit: cover;
 
-  background: #080e18;
+  border-radius: inherit;
 
   transform: scaleX(-1);
 
-  z-index: 2;
+  background: #050a11;
 }
 
-
-/* Screen share should NOT be mirrored */
-.webcam-video.screen-share,
-.video-feed-placeholder.screen-sharing video {
-  transform: none;
+.camera-active {
+  color: #55e59a !important;
 }
 
-
-/* =========================================================
-   CAMERA OFF STATE
-   ========================================================= */
-
-.camera-off-state {
-  position: absolute;
-
-  inset: 0;
-
-  z-index: 4;
-
-  display: flex;
-  flex-direction: column;
-
+.camera-enable-button {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
 
-  text-align: center;
+  min-height: 44px;
 
-  background:
-    radial-gradient(
-      circle at center,
-      rgba(19, 30, 48, 0.18),
-      transparent 60%
-    );
-}
+  padding: 0 20px;
 
-.camera-off-state > span:first-child {
-  width: 58px;
-  height: 58px;
+  border: 1px solid #527bd8;
+  border-radius: 10px;
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  background: #101c31;
 
-  margin-bottom: 14px;
+  color: #cbdcff;
 
-  border:
-    1px solid #2d3b55;
-
-  border-radius: 50%;
-
-  background: #0d1624;
-
-  color: #7f8da2;
-
-  font-size: 20px;
-
-  box-shadow:
-    0 10px 30px rgba(0, 0, 0, 0.2);
-}
-
-.camera-off-state p {
-  margin: 0;
-
-  color: #7f8da2;
-
-  font-size: 12px;
-}
-
-
-/* Camera permission button */
-.camera-permission-button,
-.enable-camera-button,
-.camera-off-state button {
-  margin-top: 15px;
-
-  padding: 9px 15px;
-
-  border:
-    1px solid #40567e;
-
-  border-radius: 8px;
-
-  background: #111d30;
-
-  color: #aec1ed;
-
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 600;
 
   cursor: pointer;
 
   transition:
     background 0.2s ease,
-    border-color 0.2s ease,
     transform 0.2s ease;
 }
 
-.camera-permission-button:hover,
-.enable-camera-button:hover,
-.camera-off-state button:hover {
-  background: #172641;
-
-  border-color: #6d8cff;
-
+.camera-enable-button:hover {
+  background: #172844;
   transform: translateY(-1px);
 }
 
+.camera-error {
+  max-width: 360px;
 
-/* =========================================================
-   HARDWARE CONTROLS
-   ========================================================= */
+  margin-top: 12px;
 
-.hardware-control-bar {
-  position: relative;
-
-  min-height: 76px;
-
-  flex-shrink: 0;
-
-  display: flex;
-
-  align-items: center;
-  justify-content: center;
-
-  gap: 8px;
-
-  padding: 12px;
-
-  border-top:
-    1px solid rgba(148, 163, 184, 0.08);
-
-  background:
-    rgba(8, 13, 22, 0.98);
-
-  z-index: 10;
-}
-
-.control-btn {
-  width: 82px;
-  min-height: 48px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  padding: 9px 12px;
-
-  border:
-    1px solid #27344b;
-
-  border-radius: 10px;
-
-  background: #101827;
-
-  color: #94a3b8;
-
-  cursor: pointer;
-
-  font-size: 17px;
-
-  transition:
-    background 0.2s ease,
-    border-color 0.2s ease,
-    color 0.2s ease,
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.control-btn:hover {
-  transform: translateY(-1px);
-
-  border-color: #405375;
-
-  background: #152035;
-
-  color: #f8fafc;
-}
-
-.control-btn:active {
-  transform: translateY(0);
-}
-
-.control-btn.active {
-  background:
-    rgba(72, 95, 164, 0.18);
-
-  border-color: #607fd2;
-
-  color: #a7baff;
-
-  box-shadow:
-    0 0 18px rgba(96, 127, 210, 0.08);
-}
-
-.control-btn.off {
-  color: #fb7185;
-
-  border-color:
-    rgba(251, 113, 133, 0.3);
-
-  background:
-    rgba(127, 29, 29, 0.13);
-}
-
-.control-icon {
-  font-size: 17px;
-
-  line-height: 1;
-}
-
-.control-label {
-  margin-top: 4px;
-
-  font-size: 9px;
-
-  font-weight: 600;
-
-  letter-spacing: 0.03em;
-}
-
-
-/* =========================================================
-   CHAT AREA
-   ========================================================= */
-
-.chat-area {
-  position: relative;
-
-  min-width: 0;
-  min-height: 0;
-
-  overflow-y: auto;
-  overflow-x: hidden;
-
-  padding: 22px;
-
-  scrollbar-width: thin;
-
-  scrollbar-color:
-    #27344b transparent;
-
-  background:
-    rgba(8, 13, 22, 0.35);
-}
-
-.chat-area::-webkit-scrollbar {
-  width: 6px;
-}
-
-.chat-area::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.chat-area::-webkit-scrollbar-thumb {
-  background: #27344b;
-
-  border-radius: 10px;
-}
-
-
-/* =========================================================
-   CHAT BUBBLES
-   ========================================================= */
-
-.chat-bubble {
-  width: fit-content;
-
-  max-width: 91%;
-
-  margin-bottom: 17px;
-
-  padding: 15px 16px;
-
-  border:
-    1px solid rgba(148, 163, 184, 0.1);
-
-  border-radius: 13px;
-
-  line-height: 1.65;
-}
-
-.chat-bubble.ai {
-  margin-right: auto;
-
-  background:
-    #121b2a;
-}
-
-.chat-bubble.candidate {
-  margin-left: auto;
-
-  background:
-    linear-gradient(
-      145deg,
-      #293f7c,
-      #243667
-    );
-
-  border-color:
-    rgba(109, 140, 255, 0.22);
-}
-
-.chat-role {
-  display: block;
-
-  margin-bottom: 8px;
-
-  color: #88a4ec;
-
-  font-size: 9px;
-  font-weight: 750;
-
-  letter-spacing: 0.09em;
-
-  text-transform: uppercase;
-}
-
-.chat-bubble.candidate .chat-role {
-  color: #d4ddf8;
-}
-
-.chat-bubble p {
-  margin: 0;
-
-  color: #d6deea;
-
-  font-size: 13px;
-
-  white-space: pre-wrap;
-
-  word-break: break-word;
-}
-
-
-/* =========================================================
-   AI TYPING
-   ========================================================= */
-
-.typing-indicator {
-  color: #8495b2 !important;
-
-  animation:
-    typingPulse 1.2s ease-in-out infinite;
-}
-
-@keyframes typingPulse {
-  0%,
-  100% {
-    opacity: 0.45;
-  }
-
-  50% {
-    opacity: 1;
-  }
-}
-
-
-/* =========================================================
-   CHAT + INPUT CONTAINER SUPPORT
-   ========================================================= */
-
-.interview-chat-panel {
-  min-width: 0;
-  min-height: 0;
-
-  display: flex;
-  flex-direction: column;
-
-  overflow: hidden;
-
-  border:
-    1px solid rgba(148, 163, 184, 0.13);
-
-  border-radius: 17px;
-
-  background:
-    linear-gradient(
-      145deg,
-      rgba(13, 21, 34, 0.98),
-      rgba(7, 12, 21, 0.98)
-    );
-
-  box-shadow:
-    0 18px 45px rgba(0, 0, 0, 0.16);
-}
-
-.chat-panel-header {
-  min-height: 72px;
-
-  display: flex;
-
-  align-items: center;
-  justify-content: space-between;
-
-  padding: 16px 20px;
-
-  border-bottom:
-    1px solid rgba(148, 163, 184, 0.08);
-
-  background:
-    rgba(14, 21, 33, 0.76);
-}
-
-.chat-panel-header h3 {
-  margin: 5px 0 0;
-
-  color: #e6edf7;
-
-  font-size: 14px;
-  font-weight: 650;
-}
-
-.ai-online-status {
-  display: flex;
-  align-items: center;
-
-  gap: 7px;
-
-  color: #7f91a9;
-
-  font-size: 10px;
-}
-
-.ai-online-status span {
-  width: 6px;
-  height: 6px;
-
-  border-radius: 50%;
-
-  background: #4ade80;
-
-  box-shadow:
-    0 0 8px rgba(74, 222, 128, 0.45);
-}
-
-
-/* =========================================================
-   ANSWER INPUT
-   ========================================================= */
-
-.input-area {
-  flex-shrink: 0;
-
-  display: flex;
-
-  gap: 9px;
-
-  padding: 15px 18px;
-
-  border-top:
-    1px solid rgba(148, 163, 184, 0.08);
-
-  background:
-    rgba(8, 13, 22, 0.98);
-}
-
-.text-input {
-  flex: 1;
-
-  min-width: 0;
-
-  height: 50px;
-
-  padding: 0 15px;
-
-  border:
-    1px solid #27344b;
-
-  border-radius: 10px;
-
-  outline: none;
-
-  background: #0a101b;
-
-  color: #edf2f8;
-
-  font-size: 13px;
-
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease,
-    background 0.2s ease;
-}
-
-.text-input::placeholder {
-  color: #59677c;
-}
-
-.text-input:focus {
-  border-color: #607fd2;
-
-  background: #0b111d;
-
-  box-shadow:
-    0 0 0 3px
-    rgba(96, 127, 210, 0.09);
-}
-
-.send-button {
-  width: 52px;
-  height: 50px;
-
-  flex-shrink: 0;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  border: none;
-
-  border-radius: 10px;
-
-  background:
-    linear-gradient(
-      135deg,
-      #718de4,
-      #5c75c6
-    );
-
-  color: white;
-
-  font-size: 18px;
-
-  cursor: pointer;
-
-  transition:
-    transform 0.2s ease,
-    background 0.2s ease,
-    opacity 0.2s ease;
-}
-
-.send-button:hover:not(:disabled) {
-  transform: translateY(-1px);
-
-  background:
-    linear-gradient(
-      135deg,
-      #7f9bf0,
-      #6680d6
-    );
-}
-
-.send-button:disabled {
-  opacity: 0.45;
-
-  cursor: not-allowed;
-}
-
-
-/* =========================================================
-   INTERVIEW ERROR
-   ========================================================= */
-
-.interview-error {
-  flex-shrink: 0;
-
-  margin: 0 18px 12px;
-
-  padding: 10px 12px;
-
-  border:
-    1px solid rgba(248, 113, 113, 0.18);
-
-  border-radius: 8px;
-
-  background:
-    rgba(127, 29, 29, 0.12);
-
-  color: #fca5a5;
-
-  font-size: 10px;
-
-  line-height: 1.5;
-
-  word-break: break-word;
-}
-
-
-/* =========================================================
-   LOADING STATE
-   ========================================================= */
-
-.loading-state,
-.interview-loading-card {
-  width: min(440px, calc(100% - 40px));
-
-  margin: auto;
-
-  padding: 40px;
+  color: #ff9ba6;
 
   text-align: center;
-
-  border:
-    1px solid rgba(148, 163, 184, 0.12);
-
-  border-radius: 17px;
-
-  background:
-    linear-gradient(
-      145deg,
-      #0d1420,
-      #0a101a
-    );
-
-  box-shadow:
-    0 20px 60px rgba(0, 0, 0, 0.25);
-}
-
-.loading-spinner {
-  width: 32px;
-  height: 32px;
-
-  margin: 0 auto 20px;
-
-  border:
-    3px solid #25324a;
-
-  border-top-color: #7794ef;
-
-  border-radius: 50%;
-
-  animation:
-    loadingSpin 0.8s linear infinite;
-}
-
-@keyframes loadingSpin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.loading-state h2,
-.interview-loading-card h2 {
-  margin: 0 0 9px;
-
-  color: #f8fafc;
-
-  font-size: 20px;
-}
-
-.loading-state p,
-.interview-loading-card p {
-  margin: 0;
-
-  color: #77859a;
-
-  font-size: 13px;
-
-  line-height: 1.6;
-}
-
-
-/* =========================================================
-   ERROR PAGE
-   ========================================================= */
-
-.error-state,
-.interview-error-page {
-  width: min(480px, calc(100% - 40px));
-
-  margin: auto;
-
-  padding: 40px;
-
-  text-align: center;
-
-  border:
-    1px solid rgba(248, 113, 113, 0.15);
-
-  border-radius: 17px;
-
-  background: #0d1420;
-}
-
-.error-state h2,
-.interview-error-page h2 {
-  margin: 0 0 9px;
-
-  color: #f8fafc;
-
-  font-size: 20px;
-}
-
-.error-state p,
-.interview-error-page p {
-  margin: 0;
-
-  color: #78869a;
-
-  font-size: 13px;
-
-  line-height: 1.6;
-}
-
-.secondary-action-button {
-  margin-top: 20px;
-
-  padding: 10px 15px;
-
-  border:
-    1px solid #32425d;
-
-  border-radius: 9px;
-
-  background: #111927;
-
-  color: #b4c1d5;
-
-  cursor: pointer;
 
   font-size: 12px;
 }
 
-.secondary-action-button:hover {
-  border-color: #526b98;
 
-  color: #f8fafc;
+/* =========================================================
+   MEDIA CONTROLS
+   ========================================================= */
+
+.media-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  gap: 10px;
+
+  padding: 16px;
+}
+
+.media-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  min-height: 42px;
+
+  padding: 0 16px;
+
+  border: 1px solid #263957;
+  border-radius: 10px;
+
+  background: #0c1524;
+
+  color: #aab8cd;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.media-button:hover {
+  background: #111e31;
+  border-color: #4d70b6;
+  color: #e5ecf8;
+}
+
+.media-button.media-active {
+  border-color: #527bd8;
+  background: #14213a;
+  color: #cbdcff;
 }
 
 
@@ -1677,174 +1612,782 @@ select:focus-visible {
    RESPONSIVE
    ========================================================= */
 
-@media (max-width: 1050px) {
-
-  .interview-main {
+@media (max-width: 800px) {
+  .language-grid {
     grid-template-columns: 1fr;
+  }
 
-    overflow-y: auto;
+  .resume-upload-box {
+    align-items: flex-start;
+  }
 
+  .browse-button {
+    min-width: 78px;
+  }
+
+  .media-controls {
+    flex-wrap: wrap;
+  }
+}
+/* =========================================================
+   INTERVIEW PAGE ONLY
+   DO NOT MODIFY OTHER PAGE STYLES
+========================================================= */
+
+.interview-page {
+  min-height: 100vh;
+  width: 100%;
+
+  box-sizing: border-box;
+
+  background:
+    radial-gradient(
+      circle at 50% -20%,
+      rgba(46, 76, 140, 0.16),
+      transparent 42%
+    ),
+    #050a12;
+
+  color: #e8edf7;
+
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
+  padding: 22px 32px 32px;
+}
+
+.interview-page *,
+.interview-page *::before,
+.interview-page *::after {
+  box-sizing: border-box;
+}
+
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.interview-page .interview-header {
+  width: 100%;
+
+  min-height: 78px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 22px;
+
+  border: 1px solid #1d2b42;
+  border-radius: 18px;
+
+  background: rgba(8, 14, 25, 0.92);
+
+  box-shadow:
+    0 12px 35px rgba(0, 0, 0, 0.22);
+}
+
+.interview-page .interview-status {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+
+.interview-page .interview-live-dot {
+  width: 9px;
+  height: 9px;
+
+  border-radius: 50%;
+
+  background: #4ade9a;
+
+  box-shadow:
+    0 0 14px rgba(74, 222, 154, 0.7);
+}
+
+.interview-page .interview-status-title {
+  color: #a8b9d5;
+
+  font-size: 13px;
+  font-weight: 650;
+
+  letter-spacing: 2px;
+}
+
+.interview-page .interview-question-count {
+  margin-top: 4px;
+
+  color: #f1f5fb;
+
+  font-size: 15px;
+}
+
+.interview-page .interview-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.interview-page .interview-language {
+  min-height: 40px;
+
+  display: flex;
+  align-items: center;
+
+  padding: 0 16px;
+
+  border: 1px solid #263957;
+  border-radius: 10px;
+
+  background: #0c1524;
+
+  color: #bdd0ed;
+
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.interview-page .interview-exit-button {
+  min-height: 40px;
+
+  padding: 0 17px;
+
+  border: 1px solid #263957;
+  border-radius: 10px;
+
+  background: #0c1524;
+
+  color: #c4d0e2;
+
+  font-size: 13px;
+
+  cursor: pointer;
+
+  transition: 0.2s ease;
+}
+
+.interview-page .interview-exit-button:hover {
+  background: #121f33;
+  border-color: #527bd8;
+  color: white;
+}
+
+
+/* =========================================================
+   ERROR
+========================================================= */
+
+.interview-page .interview-error {
+  margin-top: 14px;
+
+  min-height: 48px;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 12px 17px;
+
+  border: 1px solid #6a3039;
+  border-radius: 12px;
+
+  background: #190c11;
+
+  color: #ffadb6;
+
+  font-size: 13px;
+}
+
+.interview-page .interview-error span {
+  width: 21px;
+  height: 21px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: #7f2935;
+
+  color: white;
+
+  font-weight: 700;
+}
+
+
+/* =========================================================
+   MAIN TWO-COLUMN LAYOUT
+========================================================= */
+
+.interview-page .interview-main {
+  width: 100%;
+
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1fr)
+    minmax(0, 1fr);
+
+  gap: 24px;
+
+  margin-top: 22px;
+}
+
+
+/* =========================================================
+   CARDS
+========================================================= */
+
+.interview-page .interview-card {
+  min-width: 0;
+
+  min-height: 650px;
+
+  overflow: hidden;
+
+  border: 1px solid #1e2d45;
+  border-radius: 20px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(12, 20, 34, 0.98),
+      rgba(7, 13, 23, 0.98)
+    );
+
+  box-shadow:
+    0 18px 45px rgba(0, 0, 0, 0.25);
+}
+
+.interview-page .interview-card-header {
+  min-height: 104px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 28px;
+
+  border-bottom: 1px solid #1b283d;
+}
+
+.interview-page .interview-eyebrow {
+  margin-bottom: 8px;
+
+  color: #7ea6ff;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  letter-spacing: 2px;
+}
+
+.interview-page .interview-card-header h2 {
+  margin: 0;
+
+  color: #f0f4fb;
+
+  font-size: 21px;
+  font-weight: 650;
+}
+
+
+/* =========================================================
+   CAMERA
+========================================================= */
+
+.interview-page .camera-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 9px 13px;
+
+  border-radius: 9px;
+
+  background: #111b2c;
+
+  color: #8998af;
+
+  font-size: 12px;
+}
+
+.interview-page .camera-status > span {
+  width: 7px;
+  height: 7px;
+
+  border-radius: 50%;
+
+  background: #64748b;
+}
+
+.interview-page .camera-status.camera-status-on {
+  color: #5ee7a2;
+
+  background: rgba(34, 197, 94, 0.08);
+}
+
+.interview-page .camera-status.camera-status-on > span {
+  background: #4ade9a;
+
+  box-shadow:
+    0 0 10px rgba(74, 222, 154, 0.7);
+}
+
+.interview-page .camera-view {
+  position: relative;
+
+  height: 480px;
+
+  background: #040910;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.interview-page .candidate-video {
+  width: 100%;
+  height: 100%;
+
+  display: block;
+
+  object-fit: cover;
+
+  background: #040910;
+
+  transform: scaleX(-1);
+}
+
+.interview-page .camera-disabled {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+}
+
+.interview-page .camera-disabled-icon {
+  width: 68px;
+  height: 68px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin-bottom: 18px;
+
+  border: 1px solid #2b405f;
+  border-radius: 50%;
+
+  background: #0c1627;
+
+  color: #8ca5ca;
+
+  font-size: 25px;
+}
+
+.interview-page .camera-disabled-title {
+  margin-bottom: 18px;
+
+  color: #8392aa;
+
+  font-size: 14px;
+}
+
+.interview-page .enable-camera-button {
+  min-height: 44px;
+
+  padding: 0 19px;
+
+  border: 1px solid #527bd8;
+  border-radius: 10px;
+
+  background: #111e34;
+
+  color: #cbdcff;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: 0.2s ease;
+}
+
+.interview-page .enable-camera-button:hover {
+  background: #172845;
+  transform: translateY(-1px);
+}
+
+.interview-page .camera-permission-error {
+  max-width: 340px;
+
+  margin-top: 12px;
+
+  color: #ff9da8;
+
+  font-size: 12px;
+}
+
+
+/* =========================================================
+   CONTROLS
+========================================================= */
+
+.interview-page .interview-controls {
+  min-height: 78px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 10px;
+
+  padding: 16px;
+
+  border-top: 1px solid #18253a;
+}
+
+.interview-page .interview-control {
+  min-height: 43px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  padding: 0 17px;
+
+  border: 1px solid #293b59;
+  border-radius: 10px;
+
+  background: #0c1524;
+
+  color: #aebdd1;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.interview-page .interview-control:hover {
+  background: #122039;
+  border-color: #4b70b6;
+  color: #e2eaf6;
+}
+
+.interview-page .interview-control.control-active {
+  border-color: #668df0;
+
+  background: #14233d;
+
+  color: #d7e4ff;
+}
+
+.interview-page .control-icon {
+  font-size: 10px;
+}
+
+
+/* =========================================================
+   AI PANEL
+========================================================= */
+
+.interview-page .ai-online {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  color: #58dfa0;
+
+  font-size: 12px;
+}
+
+.interview-page .ai-online span {
+  width: 7px;
+  height: 7px;
+
+  border-radius: 50%;
+
+  background: #4ade9a;
+
+  box-shadow:
+    0 0 10px rgba(74, 222, 154, 0.7);
+}
+
+.interview-page .ai-content {
+  height: 480px;
+
+  padding: 32px;
+
+  overflow-y: auto;
+}
+
+.interview-page .ai-question {
+  padding: 22px;
+
+  border: 1px solid #263957;
+  border-radius: 16px;
+
+  background: #111b2b;
+}
+
+.interview-page .ai-question-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  margin-bottom: 17px;
+
+  color: #8ba9e9;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  letter-spacing: 2px;
+}
+
+.interview-page .ai-question-label span {
+  width: 34px;
+  height: 34px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 9px;
+
+  background: #1c315b;
+
+  color: #9dbaff;
+
+  font-size: 12px;
+  letter-spacing: 0;
+}
+
+.interview-page .ai-question-text {
+  color: #e3e9f3;
+
+  font-size: 15px;
+
+  line-height: 1.75;
+}
+
+
+/* =========================================================
+   ANSWER
+========================================================= */
+
+.interview-page .answer-container {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+
+  padding: 16px 22px 0;
+}
+
+.interview-page .answer-container textarea {
+  flex: 1;
+
+  min-height: 58px;
+  max-height: 150px;
+
+  resize: vertical;
+
+  padding: 17px;
+
+  border: 1px solid #2b3c58;
+  border-radius: 12px;
+
+  outline: none;
+
+  background: #090f1a;
+
+  color: #e8edf6;
+
+  font-family: inherit;
+
+  font-size: 14px;
+
+  line-height: 1.5;
+
+  transition: border-color 0.2s ease;
+}
+
+.interview-page .answer-container textarea::placeholder {
+  color: #687993;
+}
+
+.interview-page .answer-container textarea:focus {
+  border-color: #587ed2;
+
+  box-shadow:
+    0 0 0 3px rgba(88, 126, 210, 0.1);
+}
+
+.interview-page .answer-submit {
+  width: 58px;
+  min-width: 58px;
+
+  border: 0;
+  border-radius: 12px;
+
+  background: #6385df;
+
+  color: white;
+
+  font-size: 27px;
+
+  cursor: pointer;
+
+  transition: 0.2s ease;
+}
+
+.interview-page .answer-submit:hover:not(:disabled) {
+  background: #7697ee;
+
+  transform: translateY(-1px);
+}
+
+.interview-page .answer-submit:disabled {
+  opacity: 0.4;
+
+  cursor: not-allowed;
+}
+
+.interview-page .answer-hint {
+  display: flex;
+  justify-content: space-between;
+
+  padding: 9px 23px;
+
+  color: #687993;
+
+  font-size: 11px;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1000px) {
+  .interview-page {
     padding: 16px;
   }
 
-  .video-area,
-  .interview-chat-panel {
-    min-height: 520px;
-  }
-
-  .video-feed-placeholder {
-    min-height: 400px;
-  }
-
-}
-
-
-@media (max-width: 700px) {
-
-  .header {
-    padding: 0 18px;
-  }
-
-  .cohort-status {
-    display: none;
-  }
-
-  .hero-section {
-    padding: 65px 18px;
-  }
-
-  .hero-content h1 {
-    font-size: 46px;
-  }
-
-  .features {
+  .interview-page .interview-main {
     grid-template-columns: 1fr;
   }
 
-  .setup-page {
-    padding: 60px 15px 40px;
+  .interview-page .interview-card {
+    min-height: auto;
   }
 
-  .setup-title {
-    font-size: 38px;
-  }
-
-  .interview-top-bar {
-    height: 62px;
-
-    padding: 0 15px;
-  }
-
-  .interview-live-badge {
-    font-size: 9px;
-  }
-
-  .language-badge {
-    right: 15px;
-
-    padding: 7px 9px;
-
-    font-size: 10px;
-  }
-
-  .interview-back-button {
-    left: 15px;
-
-    padding: 7px 9px;
-  }
-
-  .interview-main {
-    padding: 10px;
-
-    gap: 10px;
-  }
-
-  .video-area,
-  .interview-chat-panel {
-    min-height: 470px;
-
-    border-radius: 13px;
-  }
-
-  .video-feed-placeholder {
-    min-height: 300px;
-  }
-
-  .hardware-control-bar {
-    gap: 5px;
-
-    padding: 10px;
-  }
-
-  .control-btn {
-    width: 68px;
-
-    min-width: 68px;
-  }
-
-  .chat-area {
-    padding: 15px;
-  }
-
-  .chat-bubble {
-    max-width: 95%;
-  }
-
-  .input-area {
-    padding: 10px;
-  }
-
-  .resume-selected {
-    flex-wrap: wrap;
-  }
-
-  .resume-remove-button {
-    margin-left: auto;
+  .interview-page .camera-view,
+  .interview-page .ai-content {
+    height: 420px;
   }
 }
 
-
-@media (max-width: 480px) {
-
-  .hero-content h1 {
-    font-size: 38px;
+@media (max-width: 650px) {
+  .interview-page .interview-header {
+    padding: 15px;
   }
 
-  .setup-title {
-    font-size: 32px;
+  .interview-page .interview-header-right {
+    gap: 6px;
   }
 
-  .interview-live-badge {
-    max-width: 180px;
-
-    overflow: hidden;
-
-    white-space: nowrap;
-
-    text-overflow: ellipsis;
+  .interview-page .interview-exit-button {
+    font-size: 11px;
+    padding: 0 10px;
   }
 
-  .interview-back-button {
-    font-size: 0;
+  .interview-page .interview-language {
+    padding: 0 10px;
   }
 
-  .interview-back-button > span:first-child {
-    font-size: 16px;
+  .interview-page .interview-card-header {
+    padding: 0 18px;
   }
 
-  .control-btn {
-    width: 60px;
-
-    min-width: 60px;
-
-    font-size: 15px;
+  .interview-page .interview-controls {
+    flex-wrap: wrap;
   }
 
-  .text-input {
-    font-size: 12px;
+  .interview-page .interview-control {
+    flex: 1;
   }
 
-  .send-button {
-    width: 48px;
+  .interview-page .answer-container {
+    padding: 12px;
   }
+}
+/* Interview question loading */
+
+.interview-page .question-loading {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+
+  color: #91a4c2;
+}
+
+.interview-page .question-loading span {
+  width: 7px;
+  height: 7px;
+
+  border-radius: 50%;
+
+  background: #7094e8;
+
+  animation: interviewQuestionPulse 1.2s infinite ease-in-out;
+}
+
+.interview-page .question-loading span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.interview-page .question-loading span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes interviewQuestionPulse {
+  0%,
+  60%,
+  100% {
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+
+  30% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
+
+.interview-page .interview-control.control-active {
+  border-color: #668df0;
+  background: #14233d;
+  color: #d7e4ff;
+}
+
+.interview-page .interview-control.control-active .control-icon {
+  color: #4ade9a;
 }

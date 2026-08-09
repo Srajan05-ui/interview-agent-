@@ -1,251 +1,211 @@
 import { useState } from "react";
-
 import CandidateSetup from "./components/CandidateSetup";
 import InterviewUI from "./components/InterviewUI";
-import Scorecard from "./components/Scorecard";
+import ResultsDashboard from "./components/ResultsDashboard";
 
 function App() {
   const [screen, setScreen] = useState("landing");
+  const [interviewData, setInterviewData] = useState(null);
 
-  const [interviewData, setInterviewData] = useState({
-    candidateId: "CAND-001",
-    language: "English",
-    resumeFile: null,
-  });
-
-  const [interviewResult, setInterviewResult] = useState(null);
-
-  // =====================================================
+  // --------------------------------------------------
   // START INTERVIEW
-  // =====================================================
+  // --------------------------------------------------
 
-  const handleStartInterview = (data) => {
-    if (data) {
-      setInterviewData((previous) => ({
-        ...previous,
-        ...data,
-      }));
-    }
+  function handleStartInterview(data) {
+    console.log("Interview started:", data);
 
+    setInterviewData(data);
     setScreen("interview");
-  };
-
-  // =====================================================
-  // INTERVIEW COMPLETED
-  // =====================================================
-
-  const handleInterviewComplete = (result) => {
-    console.log("Final interview result:", result);
-
-    setInterviewResult(result || {});
-    setScreen("scorecard");
-  };
-
-  // =====================================================
-  // EXIT INTERVIEW
-  // =====================================================
-
-  const handleExitInterview = () => {
-    setScreen("setup");
-  };
-
-  // =====================================================
-  // LANDING
-  // =====================================================
-
-  if (screen === "landing") {
-    return (
-      <div className="app">
-
-        <header className="app-header">
-
-          <div className="brand">
-            <div className="brand-mark">
-              AI
-            </div>
-
-            <div>
-              <div className="brand-name">
-                Interview Agent
-              </div>
-
-              <div className="brand-subtitle">
-                AI-powered technical interviews
-              </div>
-            </div>
-          </div>
-
-          <div className="cohort-status">
-            <span className="status-dot"></span>
-            AI Cohort
-          </div>
-
-        </header>
-
-        <main className="hero-section">
-
-          <div className="hero-content">
-
-            <div className="hero-badge">
-              ✦ Personalized Technical Interview
-            </div>
-
-            <h1>
-              Your AI Interview.
-              <br />
-
-              <span>
-                Built around your
-              </span>
-
-              <br />
-
-              <span>
-                journey.
-              </span>
-            </h1>
-
-            <p className="hero-description">
-              Practice technical interviews based on
-              your skills, projects and learning journey
-              with an adaptive AI interviewer.
-            </p>
-
-            <button
-              className="primary-button"
-              onClick={() => setScreen("setup")}
-            >
-              Start Interview
-              <span>→</span>
-            </button>
-
-            <div className="topic-list">
-              <span>RAG</span>
-              <span>Vector Databases</span>
-              <span>Agentic AI</span>
-              <span>MCP</span>
-              <span>AI Deployment</span>
-            </div>
-
-            <section className="features">
-
-              <div className="feature-card">
-                <div className="feature-number">
-                  01
-                </div>
-
-                <div>
-                  <h3>
-                    Personalized
-                  </h3>
-
-                  <p>
-                    Questions adapt to your
-                    skills and learning journey.
-                  </p>
-                </div>
-              </div>
-
-              <div className="feature-card">
-                <div className="feature-number">
-                  02
-                </div>
-
-                <div>
-                  <h3>
-                    Conversational
-                  </h3>
-
-                  <p>
-                    Follow-up questions respond
-                    to your answers.
-                  </p>
-                </div>
-              </div>
-
-              <div className="feature-card">
-                <div className="feature-number">
-                  03
-                </div>
-
-                <div>
-                  <h3>
-                    Actionable
-                  </h3>
-
-                  <p>
-                    Finish with a technical
-                    scorecard and improvement plan.
-                  </p>
-                </div>
-              </div>
-
-            </section>
-
-          </div>
-
-        </main>
-
-      </div>
-    );
   }
 
-  // =====================================================
-  // SETUP
-  // =====================================================
+  // --------------------------------------------------
+  // EXIT INTERVIEW
+  // --------------------------------------------------
+
+  function handleExitInterview() {
+    setScreen("setup");
+  }
+
+  // --------------------------------------------------
+  // INTERVIEW COMPLETE
+  // --------------------------------------------------
+
+  function handleCompleteInterview(results) {
+    setInterviewData((previous) => ({
+      ...(previous || {}),
+      results,
+    }));
+
+    setScreen("results");
+  }
+
+  // ==================================================
+  // CANDIDATE SETUP
+  // ==================================================
 
   if (screen === "setup") {
     return (
       <CandidateSetup
+        onBack={() => setScreen("landing")}
         onStart={handleStartInterview}
       />
     );
   }
 
-  // =====================================================
+  // ==================================================
   // INTERVIEW
-  // =====================================================
+  // ==================================================
 
   if (screen === "interview") {
     return (
       <InterviewUI
-        candidateId={
-          interviewData.candidateId
-        }
-
-        language={
-          interviewData.language
-        }
-
-        resumeFile={
-          interviewData.resumeFile
-        }
-
-        onComplete={
-          handleInterviewComplete
-        }
-
-        onExit={
-          handleExitInterview
-        }
+        interviewData={interviewData}
+        onExit={handleExitInterview}
+        onComplete={handleCompleteInterview}
       />
     );
   }
 
-  // =====================================================
-  // SCORECARD
-  // =====================================================
+  // ==================================================
+  // RESULTS
+  // ==================================================
 
-  if (screen === "scorecard") {
+  if (screen === "results") {
     return (
-      <Scorecard
-        result={interviewResult}
-        onBack={() => setScreen("setup")}
+      <ResultsDashboard
+        data={interviewData}
+        onRestart={() => setScreen("setup")}
       />
     );
   }
 
-  return null;
+  // ==================================================
+  // LANDING PAGE
+  // ==================================================
+
+  return (
+    <div className="landing-page">
+
+      {/* Background decoration */}
+      <div className="landing-glow landing-glow-one"></div>
+      <div className="landing-glow landing-glow-two"></div>
+
+      {/* Header */}
+      <header className="landing-header">
+
+        <div className="brand">
+          <div className="brand-mark">
+            AI
+          </div>
+
+          <div>
+            <div className="brand-name">
+              Interview Agent
+            </div>
+
+            <div className="brand-subtitle">
+              AI Technical Interviewer
+            </div>
+          </div>
+        </div>
+
+        <div className="header-status">
+          <span className="status-dot"></span>
+          System Ready
+        </div>
+
+      </header>
+
+      {/* Main */}
+      <main className="landing-content">
+
+        <div className="landing-eyebrow">
+          AI COHORT INTERVIEW
+        </div>
+
+        <h1>
+          Prepare for your
+          <br />
+          <span>technical interview.</span>
+        </h1>
+
+        <p className="landing-description">
+          Practice realistic technical interviews personalized
+          around your skills, projects, experience and
+          engineering knowledge.
+        </p>
+
+        {/* Feature cards */}
+
+        <div className="landing-features">
+
+          <div className="landing-feature">
+            <div className="feature-icon">
+              AI
+            </div>
+
+            <div>
+              <strong>AI Interviewer</strong>
+              <span>
+                Adaptive technical questions
+              </span>
+            </div>
+          </div>
+
+          <div className="landing-feature">
+            <div className="feature-icon">
+              CV
+            </div>
+
+            <div>
+              <strong>Resume Based</strong>
+              <span>
+                Questions based on your skills
+              </span>
+            </div>
+          </div>
+
+          <div className="landing-feature">
+            <div className="feature-icon">
+              ✓
+            </div>
+
+            <div>
+              <strong>Detailed Scorecard</strong>
+              <span>
+                Strengths and weak areas
+              </span>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Start */}
+
+        <button
+          className="landing-start-button"
+          onClick={() => setScreen("setup")}
+        >
+          <span>Configure Interview</span>
+          <span className="button-arrow">→</span>
+        </button>
+
+        <div className="landing-note">
+          No setup required. Choose your preferences and begin.
+        </div>
+
+      </main>
+
+      {/* Footer */}
+
+      <footer className="landing-footer">
+        <span>AI Interview Agent</span>
+        <span>•</span>
+        <span>Personalized Technical Interview Platform</span>
+      </footer>
+
+    </div>
+  );
 }
 
 export default App;
