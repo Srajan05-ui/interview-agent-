@@ -2,7 +2,7 @@ from openai import OpenAI
 
 from app.core.config import (
     OPENROUTER_API_KEY,
-    OPENROUTER_MODEL
+    OPENROUTER_MODEL,
 )
 
 
@@ -17,7 +17,7 @@ class LLMService:
 
         self.client = OpenAI(
             api_key=OPENROUTER_API_KEY,
-            base_url="https://openrouter.ai/api/v1"
+            base_url="https://openrouter.ai/api/v1",
         )
 
         self.model = OPENROUTER_MODEL
@@ -26,7 +26,7 @@ class LLMService:
         self,
         system_prompt: str,
         user_prompt: str,
-        temperature: float = 0.4
+        temperature: float = 0.4,
     ) -> str:
 
         response = self.client.chat.completions.create(
@@ -35,16 +35,16 @@ class LLMService:
             messages=[
                 {
                     "role": "system",
-                    "content": system_prompt
+                    "content": system_prompt,
                 },
                 {
                     "role": "user",
-                    "content": user_prompt
-                }
+                    "content": user_prompt,
+                },
             ],
 
             temperature=temperature,
-            max_tokens=1200
+            max_tokens=1200,
         )
 
         content = response.choices[0].message.content

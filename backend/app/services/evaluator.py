@@ -7,6 +7,7 @@ from app.services.llm import LLMService
 class AnswerEvaluator:
 
     def __init__(self):
+
         self.llm = LLMService()
 
     def evaluate(
@@ -15,42 +16,52 @@ class AnswerEvaluator:
         answer: str,
         topic: dict,
         conversation: list[dict],
+        language: str = "English",
     ) -> dict:
 
-        system_prompt = """
-You are a senior technical interviewer evaluating a candidate
-during an AI engineering technical interview.
+        language_instruction = self._language_instruction(
+            language
+        )
 
-Your job is to objectively evaluate the candidate's answer.
+        system_prompt = f"""
+You are a senior technical interviewer evaluating
+a candidate during an AI engineering technical interview.
 
-Evaluate the answer based on:
+Evaluate ONLY what the candidate actually said.
+
+Do not assume knowledge that was not demonstrated.
+
+Do not reward buzzwords without explanation.
+
+Do not punish the candidate for using simple language.
+
+Focus on:
 
 1. Technical accuracy
 2. Depth of understanding
-3. Clarity of explanation
+3. Clarity
 4. Practical engineering understanding
-5. Ability to reason about real-world trade-offs
+5. Reasoning and trade-offs
 
-The candidate is being interviewed about an enterprise AI
-engineering curriculum.
+LANGUAGE REQUIREMENT:
 
-IMPORTANT RULES:
+The selected interview language is:
 
-- Evaluate ONLY what the candidate actually said.
-- Do not assume knowledge that was not demonstrated.
-- Do not reward buzzwords without explanation.
-- Do not punish the candidate for using simple language.
-- Focus on technical correctness and reasoning.
-- Identify specific knowledge gaps.
-- Decide whether the interviewer should ask a follow-up.
-- If a follow-up is needed, identify exactly what concept
-  should be explored.
+{language}
+
+{language_instruction}
+
+All natural-language fields in your evaluation must
+be written in the selected language.
+
+Technical terms such as Python, RAG, API, embeddings,
+vector database, Docker and AWS may remain in English.
 
 Return ONLY valid JSON.
 
 Use exactly this structure:
 
-{
+{{
     "score": 0,
     "technical_accuracy": 0,
     "depth": 0,
@@ -60,7 +71,7 @@ Use exactly this structure:
     "feedback": "",
     "needs_follow_up": false,
     "follow_up_focus": ""
-}
+}}
 
 SCORING:
 
@@ -71,28 +82,28 @@ technical_accuracy:
 Technical correctness from 0 to 10.
 
 depth:
-Depth of understanding and reasoning from 0 to 10.
+Depth of understanding from 0 to 10.
 
 clarity:
-How clearly and logically the candidate communicated
-the answer from 0 to 10.
+How clearly the candidate communicated from 0 to 10.
 
 strengths:
-List 1-4 specific strengths demonstrated in the answer.
+List 1-4 specific strengths.
 
 weak_areas:
-List 1-4 specific areas where understanding could be improved.
+List 1-4 specific improvement areas.
 
 feedback:
-A short explanation of the candidate's performance.
+Short explanation of performance.
 
 needs_follow_up:
-true if the answer is incomplete, weak, vague, contains
-an important misconception, or deserves deeper technical probing.
+true if the answer is incomplete, weak, vague,
+contains an important misconception, or needs
+deeper technical probing.
 
 follow_up_focus:
-If needs_follow_up is true, describe the exact concept
-that should be explored next.
+If needs_follow_up is true, describe the exact
+concept that should be explored next.
 
 If needs_follow_up is false, use an empty string.
 
@@ -104,27 +115,35 @@ CURRENT INTERVIEW QUESTION:
 
 {question}
 
-
 CANDIDATE ANSWER:
 
 {answer}
 
-
 CURRENT CURRICULUM TOPIC:
 
-{json.dumps(topic, indent=2)}
-
+{json.dumps(
+    topic,
+    indent=2,
+    ensure_ascii=False,
+)}
 
 PREVIOUS CONVERSATION:
 
-{json.dumps(conversation, indent=2)}
+{json.dumps(
+    conversation,
+    indent=2,
+    ensure_ascii=False,
+)}
 
+SELECTED LANGUAGE:
+
+{language}
 
 Evaluate the candidate's answer.
 
-Pay special attention to whether the candidate explains
-WHY and WHEN an engineering decision should be made,
-not just WHAT the technology is.
+Pay special attention to whether the candidate
+explains WHY and WHEN an engineering decision
+should be made, not just WHAT the technology is.
 
 Return ONLY the required JSON object.
 """
@@ -135,7 +154,45 @@ Return ONLY the required JSON object.
             temperature=0.1,
         )
 
-        return self._parse_response(raw_response)
+        return self._parse_response(
+            raw_response
+        )
+
+    # =========================================================
+    # LANGUAGE
+    # =========================================================
+
+    def _language_instruction(
+        self,
+        language: str,
+    ) -> str:
+
+        if language == "Hindi":
+
+            return """
+Write all natural-language evaluation fields
+in Hindi using Devanagari script.
+
+Technical terms may remain in English.
+"""
+
+        if language == "Hinglish":
+
+            return """
+Write all natural-language evaluation fields
+in natural conversational Hinglish using Roman script.
+
+Technical terms may remain in English.
+"""
+
+        return """
+Write all natural-language evaluation fields
+in professional English.
+"""
+
+    # =========================================================
+    # JSON PARSER
+    # =========================================================
 
     def _parse_response(
         self,
@@ -143,10 +200,6 @@ Return ONLY the required JSON object.
     ) -> dict:
 
         response = response.strip()
-
-        # -------------------------------------------------
-        # Remove Markdown code fences
-        # -------------------------------------------------
 
         response = re.sub(
             r"^```json\s*",
@@ -167,19 +220,13 @@ Return ONLY the required JSON object.
             response,
         )
 
-        # -------------------------------------------------
-        # First attempt: direct JSON parsing
-        # -------------------------------------------------
-
         try:
 
-            result = json.loads(response)
+            result = json.loads(
+                response
+            )
 
         except json.JSONDecodeError:
-
-            # -------------------------------------------------
-            # Second attempt: extract JSON object
-            # -------------------------------------------------
 
             match = re.search(
                 r"\{.*\}",
@@ -190,7 +237,8 @@ Return ONLY the required JSON object.
             if not match:
 
                 raise ValueError(
-                    "Evaluator did not return valid JSON."
+                    "Evaluator did not return "
+                    "valid JSON."
                 )
 
             try:
@@ -202,12 +250,9 @@ Return ONLY the required JSON object.
             except json.JSONDecodeError as error:
 
                 raise ValueError(
-                    f"Evaluator returned invalid JSON: {error}"
+                    "Evaluator returned invalid JSON: "
+                    f"{error}"
                 )
-
-        # -------------------------------------------------
-        # Validate required fields
-        # -------------------------------------------------
 
         required_fields = [
             "score",
@@ -233,10 +278,6 @@ Return ONLY the required JSON object.
                 "Evaluator response missing fields: "
                 + ", ".join(missing_fields)
             )
-
-        # -------------------------------------------------
-        # Normalize scores
-        # -------------------------------------------------
 
         for field in [
             "score",
@@ -266,17 +307,9 @@ Return ONLY the required JSON object.
                 ),
             )
 
-        # -------------------------------------------------
-        # Normalize boolean
-        # -------------------------------------------------
-
         result["needs_follow_up"] = bool(
             result["needs_follow_up"]
         )
-
-        # -------------------------------------------------
-        # Normalize arrays
-        # -------------------------------------------------
 
         if not isinstance(
             result["strengths"],

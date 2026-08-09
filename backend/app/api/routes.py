@@ -1,343 +1,216 @@
-from __future__ import annotations
-
+from fastapi import APIRouter, HTTPException, UploadFile, File
+from pydantic import BaseModel
+from typing import Optional
+from uuid import uuid4
+from datetime import datetime
 import json
-import uuid
-from pathlib import Path
-from typing import Any
+import re
 
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, Field
+import requests
 
-from app.core.session_store import (
-    InterviewSession,
-    session_store,
-)
+from app.core.session_store import InterviewSession, session_store
 
-from app.services.candidate import CandidateService
-from app.services.agent import InterviewAgent
+
+router = APIRouter()
 
 
 # ============================================================
-# ROUTER
+# OLLAMA
 # ============================================================
 
-router = APIRouter(
-    prefix="/api/interview",
-    tags=["Interview"],
-)
+OLLAMA_URL = "http://localhost:11434/api/generate"
+OLLAMA_MODEL = "qwen2.5-coder"
+
+
+def call_ollama(prompt: str) -> str | None:
+
+    try:
+
+        response = requests.post(
+            OLLAMA_URL,
+            json={
+                "model": OLLAMA_MODEL,
+                "prompt": prompt,
+                "stream": False,
+                "options": {
+                    "temperature": 0.4,
+                    "num_predict": 700,
+                },
+            },
+            timeout=90,
+        )
+
+        if response.status_code != 200:
+            print("Ollama error:", response.text)
+            return None
+
+        data = response.json()
+
+        return data.get("response", "").strip()
+
+    except Exception as e:
+
+        print("Ollama connection error:", e)
+
+        return None
 
 
 # ============================================================
-# PATHS
+# LANGUAGE
 # ============================================================
 
-BASE_DIR = Path(__file__).resolve().parents[2]
+def language_instruction(language: str):
 
-DATA_DIR = BASE_DIR / "data"
+    if language == "Hindi":
+        return """
+Respond completely in Hindi.
+Use clear professional Hindi.
+Technical terms such as Python, API, Docker, Git, database etc.
+may remain in English.
+"""
 
-CANDIDATES_PATH = DATA_DIR / "candidate.json"
-CURRICULUM_PATH = DATA_DIR / "curriculum.json"
+    if language == "Hinglish":
+        return """
+Respond naturally in Hinglish.
+Use Hindi and English together like a real Indian technical interviewer.
+Keep technical terms in English.
+"""
+
+    return """
+Respond in professional English.
+"""
 
 
 # ============================================================
-# SERVICES
+# PERSONA
 # ============================================================
 
-candidate_service = CandidateService(
-    str(CANDIDATES_PATH)
-)
+def persona_instruction(persona: str):
 
-interview_agent = InterviewAgent()
+    if persona == "Strict":
+        return """
+You are a strict senior technical interviewer.
+Challenge weak assumptions.
+Ask precise follow-up questions.
+Do not unnecessarily praise the candidate.
+"""
+
+    return """
+You are a friendly but professional technical interviewer.
+Be encouraging but technically accurate.
+Ask practical engineering questions.
+"""
 
 
 # ============================================================
-# REQUEST / RESPONSE MODELS
+# FALLBACK QUESTIONS
 # ============================================================
 
+DEFAULT_QUESTIONS = [
+    "Explain how you would create and manage a Python virtual environment for a project.",
+
+    "What is the difference between a list, tuple and set in Python?",
+
+    "Explain how REST APIs work and describe the purpose of HTTP methods.",
+
+    "How would you design a database for an application that stores users and interview results?",
+
+    "What is the purpose of Docker and how does containerization help deployment?",
+
+    "Explain the difference between authentication and authorization.",
+
+    "How would you troubleshoot an API that suddenly starts returning HTTP 500 errors?",
+
+    "What is Git and how would you handle a merge conflict in a team project?",
+
+    "Explain one cloud deployment architecture you have worked with or studied.",
+
+    "Describe a technical project you built and explain one difficult engineering decision you made."
+]
+
+
+# ============================================================
+# FALLBACK EVALUATION
+# ============================================================
+
+def fallback_evaluation(answer: str, question: str):
+
+    length = len(answer.strip())
+
+    if length < 30:
+        score = 3
+        feedback = "The answer is too short. Explain the concept with more technical detail and an example."
+        strengths = ["Attempted the question"]
+        weaknesses = ["Insufficient technical explanation"]
+    elif length < 100:
+        score = 6
+        feedback = "The answer shows basic understanding, but it should include more reasoning and practical examples."
+        strengths = ["Basic understanding"]
+        weaknesses = ["Needs more depth"]
+    else:
+        score = 8
+        feedback = "Good explanation with reasonable technical detail. Adding a concrete real-world example would make it stronger."
+        strengths = ["Clear explanation", "Good technical understanding"]
+        weaknesses = ["Could provide stronger examples"]
+
+    return {
+        "score": score,
+        "feedback": feedback,
+        "strengths": strengths,
+        "weak_areas": weaknesses,
+        "ideal_answer": (
+            f"A strong answer should clearly explain the main concept in the question "
+            f"'{question}', describe why it is used, mention important trade-offs, "
+            f"and provide a practical example."
+        ),
+    }
+
+
+# ============================================================
+# MODELS
+# ============================================================
 
 class StartInterviewRequest(BaseModel):
-    candidate_id: str = Field(..., min_length=1)
-
-
-class StartInterviewResponse(BaseModel):
-    session_id: str
-    question: str
-    curriculum_day: int
-    question_number: int
+    candidate_id: str
+    language: str = "English"
+    mode: str = "Scored"
+    persona: str = "Friendly"
+    skills: list[str] = []
+    resume_text: str = ""
 
 
 class AnswerRequest(BaseModel):
-    session_id: str = Field(..., min_length=1)
-    answer: str = Field(..., min_length=1)
-
-
-class AnswerResponse(BaseModel):
     session_id: str
-    question: str
-    curriculum_day: int
-    question_number: int
-    interview_completed: bool
-
-
-# ============================================================
-# DATA HELPERS
-# ============================================================
-
-
-def load_curriculum() -> Any:
-    """
-    Load curriculum JSON.
-    """
-
-    if not CURRICULUM_PATH.exists():
-        raise HTTPException(
-            status_code=500,
-            detail=f"Curriculum file not found: {CURRICULUM_PATH}",
-        )
-
-    try:
-        with open(
-            CURRICULUM_PATH,
-            "r",
-            encoding="utf-8",
-        ) as file:
-            return json.load(file)
-
-    except json.JSONDecodeError as exc:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Invalid curriculum JSON: {exc}",
-        )
-
-
-def get_candidate(candidate_id: str) -> dict:
-    """
-    Retrieve candidate profile using CandidateService.
-    """
-
-    try:
-        candidate = candidate_service.get(candidate_id)
-
-    except AttributeError:
-        # Compatibility fallback for CandidateService
-        # implementations using a different method name.
-        candidate = None
-
-    if candidate is None:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Candidate '{candidate_id}' not found.",
-        )
-
-    return candidate
-
-
-def extract_days_from_curriculum(curriculum: Any) -> list[dict]:
-    """
-    Normalize different possible curriculum JSON structures.
-
-    Supports structures such as:
-
-    [
-        {
-            "day": 1,
-            ...
-        }
-    ]
-
-    or:
-
-    {
-        "days": [...]
-    }
-
-    or:
-
-    {
-        "curriculum": [...]
-    }
-    """
-
-    if isinstance(curriculum, list):
-        return curriculum
-
-    if isinstance(curriculum, dict):
-
-        if isinstance(curriculum.get("days"), list):
-            return curriculum["days"]
-
-        if isinstance(curriculum.get("curriculum"), list):
-            return curriculum["curriculum"]
-
-        if isinstance(curriculum.get("modules"), list):
-            result = []
-
-            for module in curriculum["modules"]:
-                if isinstance(module, dict):
-
-                    days = module.get("days", [])
-
-                    if isinstance(days, list):
-                        result.extend(days)
-
-            return result
-
-    return []
-
-
-def get_day_number(topic: dict) -> int:
-    """
-    Extract curriculum day number.
-    """
-
-    value = (
-        topic.get("day")
-        or topic.get("day_number")
-        or topic.get("curriculum_day")
-    )
-
-    if value is None:
-        raise ValueError("Curriculum topic does not contain a day number.")
-
-    return int(value)
-
-
-def choose_topic(
-    curriculum: Any,
-    candidate: dict,
-    question_number: int,
-) -> dict:
-    """
-    Choose a curriculum topic.
-
-    For now we use candidate learning signals when possible,
-    while guaranteeing that the interview covers multiple days.
-
-    The adaptive planner will be improved after the basic
-    start -> answer flow is stable.
-    """
-
-    days = extract_days_from_curriculum(curriculum)
-
-    if not days:
-        raise HTTPException(
-            status_code=500,
-            detail="No curriculum days found in curriculum.json.",
-        )
-
-    # --------------------------------------------------------
-    # Preferred days
-    # --------------------------------------------------------
-
-    completed_days = set(
-        candidate.get("completed_days", [])
-        or []
-    )
-
-    skipped_days = set(
-        candidate.get("skipped_days", [])
-        or []
-    )
-
-    weak_days = set(
-        candidate.get("weak_days", [])
-        or []
-    )
-
-    # --------------------------------------------------------
-    # First prefer weak days.
-    # --------------------------------------------------------
-
-    if weak_days:
-
-        for topic in days:
-
-            try:
-                day = get_day_number(topic)
-            except (ValueError, TypeError):
-                continue
-
-            if day in weak_days and day not in skipped_days:
-                return topic
-
-    # --------------------------------------------------------
-    # Then prefer completed days.
-    # --------------------------------------------------------
-
-    for topic in days:
-
-        try:
-            day = get_day_number(topic)
-        except (ValueError, TypeError):
-            continue
-
-        if day in completed_days and day not in skipped_days:
-            return topic
-
-    # --------------------------------------------------------
-    # Fallback
-    # --------------------------------------------------------
-
-    valid_topics = []
-
-    for topic in days:
-
-        try:
-            day = get_day_number(topic)
-        except (ValueError, TypeError):
-            continue
-
-        if day not in skipped_days:
-            valid_topics.append(topic)
-
-    if not valid_topics:
-        valid_topics = days
-
-    index = (question_number - 1) % len(valid_topics)
-
-    return valid_topics[index]
+    answer: str
+    self_diagnosis: Optional[str] = ""
 
 
 # ============================================================
 # HEALTH
 # ============================================================
 
-
 @router.get("/health")
-def interview_health():
-    """
-    Interview service health check.
-    """
+def health():
+
+    ollama_running = False
+
+    try:
+
+        r = requests.get(
+            "http://localhost:11434/api/tags",
+            timeout=3
+        )
+
+        ollama_running = r.status_code == 200
+
+    except Exception:
+        pass
 
     return {
         "status": "ok",
         "service": "AI Cohort Technical Interviewer",
-        "active_sessions": session_store.count(),
-    }
-
-
-# ============================================================
-# GET INTERVIEW PLAN
-# ============================================================
-
-
-@router.get("/plan/{candidate_id}")
-def get_interview_plan(candidate_id: str):
-
-    candidate = get_candidate(candidate_id)
-
-    curriculum = load_curriculum()
-
-    days = extract_days_from_curriculum(curriculum)
-
-    return {
-        "candidate_id": candidate_id,
-        "candidate": candidate,
-        "curriculum_days_available": len(days),
-        "interview_requirements": {
-            "total_questions": 8,
-            "minimum_curriculum_days": 4,
-        },
+        "ollama": ollama_running,
+        "model": OLLAMA_MODEL,
     }
 
 
@@ -345,371 +218,433 @@ def get_interview_plan(candidate_id: str):
 # START INTERVIEW
 # ============================================================
 
+@router.post("/interview/start")
+def start_interview(request: StartInterviewRequest):
 
-@router.post(
-    "/start",
-    response_model=StartInterviewResponse,
-)
-def start_interview(
-    request: StartInterviewRequest,
-):
+    session_id = str(uuid4())
 
-    # --------------------------------------------------------
-    # Candidate
-    # --------------------------------------------------------
+    skills = request.skills or []
 
-    candidate = get_candidate(
-        request.candidate_id
-    )
+    skill_text = ", ".join(skills)
 
-    # --------------------------------------------------------
-    # Curriculum
-    # --------------------------------------------------------
+    prompt = f"""
+You are an AI technical interviewer.
 
-    curriculum = load_curriculum()
+{language_instruction(request.language)}
 
-    # --------------------------------------------------------
-    # Question 1 topic
-    # --------------------------------------------------------
+{persona_instruction(request.persona)}
 
-    topic = choose_topic(
-        curriculum=curriculum,
-        candidate=candidate,
-        question_number=1,
-    )
+Candidate skills:
+{skill_text if skill_text else "General software engineering"}
 
-    curriculum_day = get_day_number(topic)
+Generate the first technical interview question.
 
-    # --------------------------------------------------------
-    # Generate question
-    # --------------------------------------------------------
+The interview must contain exactly 10 questions overall.
 
-    try:
+Return ONLY the question.
+"""
 
-        question = interview_agent.generate_question(
-            candidate=candidate,
-            topic=topic,
-            question_number=1,
-            conversation=[],
-            previous_evaluation=None,
-        )
+    question = call_ollama(prompt)
 
-    except Exception as exc:
-
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to generate interview question: {exc}",
-        )
-
-    # --------------------------------------------------------
-    # Create session
-    # --------------------------------------------------------
-
-    session_id = str(uuid.uuid4())
+    if not question:
+        question = DEFAULT_QUESTIONS[0]
 
     session = InterviewSession(
         session_id=session_id,
         candidate_id=request.candidate_id,
-        question_number=1,
+        language=request.language,
+        mode=request.mode,
+        persona=request.persona,
         current_question=question,
-        current_curriculum_day=curriculum_day,
-        conversation=[
-            {
-                "role": "interviewer",
-                "content": question,
-                "question_number": 1,
-                "curriculum_day": curriculum_day,
-            }
-        ],
-        questions=[
-            {
-                "question_number": 1,
-                "question": question,
-                "curriculum_day": curriculum_day,
-            }
-        ],
-        curriculum_days=[
-            curriculum_day
-        ],
+        resume_text=request.resume_text,
+        skills=skills,
     )
 
-    # ========================================================
-    # IMPORTANT
-    # Store in the SINGLE global store.
-    # ========================================================
+    session.questions.append({
+        "number": 1,
+        "question": question,
+    })
 
     session_store.create(session)
 
-    # --------------------------------------------------------
-    # Debug information
-    # --------------------------------------------------------
-
-    print(
-        f"[SESSION CREATED] "
-        f"id={session_id} "
-        f"candidate={request.candidate_id} "
-        f"question=1 "
-        f"day={curriculum_day} "
-        f"active_sessions={session_store.count()}"
-    )
-
-    return StartInterviewResponse(
-        session_id=session_id,
-        question=question,
-        curriculum_day=curriculum_day,
-        question_number=1,
-    )
+    return {
+        "session_id": session_id,
+        "candidate_id": request.candidate_id,
+        "language": request.language,
+        "mode": request.mode,
+        "persona": request.persona,
+        "question_number": 1,
+        "total_questions": 10,
+        "question": question,
+    }
 
 
 # ============================================================
 # SUBMIT ANSWER
 # ============================================================
 
+@router.post("/interview/answer")
+def submit_answer(request: AnswerRequest):
 
-@router.post(
-    "/answer",
-    response_model=AnswerResponse,
-)
-def submit_answer(
-    request: AnswerRequest,
-):
+    session = session_store.get(request.session_id)
 
-    # ========================================================
-    # IMPORTANT:
-    # Retrieve from THE SAME global store.
-    # ========================================================
-
-    session = session_store.get(
-        request.session_id
-    )
-
-    print(
-        f"[SESSION LOOKUP] "
-        f"id={request.session_id} "
-        f"found={session is not None} "
-        f"active_sessions={session_store.count()}"
-    )
-
-    if session is None:
-
+    if not session:
         raise HTTPException(
             status_code=404,
-            detail=(
-                "Interview session not found. "
-                "Start a new interview and use the new session_id."
-            ),
+            detail="Interview session not found."
         )
 
-    # --------------------------------------------------------
-    # Prevent answering after completion
-    # --------------------------------------------------------
+    question = session.current_question
 
-    if session.completed:
+    evaluation_prompt = f"""
+You are evaluating a technical interview answer.
 
-        raise HTTPException(
-            status_code=400,
-            detail="This interview has already been completed.",
+{language_instruction(session.language)}
+
+Question:
+{question}
+
+Candidate answer:
+{request.answer}
+
+Evaluate the answer.
+
+Return ONLY valid JSON:
+
+{{
+  "score": 0,
+  "feedback": "...",
+  "strengths": ["..."],
+  "weak_areas": ["..."],
+  "ideal_answer": "..."
+}}
+
+Score from 0 to 10.
+
+The ideal_answer must answer the EXACT question asked.
+"""
+
+    raw = call_ollama(evaluation_prompt)
+
+    evaluation = None
+
+    if raw:
+
+        try:
+
+            cleaned = raw
+
+            if "```" in cleaned:
+                cleaned = re.sub(
+                    r"```(?:json)?",
+                    "",
+                    cleaned
+                ).replace("```", "").strip()
+
+            evaluation = json.loads(cleaned)
+
+        except Exception as e:
+
+            print("Evaluation JSON error:", e)
+
+    if not evaluation:
+        evaluation = fallback_evaluation(
+            request.answer,
+            question
         )
 
-    # --------------------------------------------------------
-    # Save candidate answer
-    # --------------------------------------------------------
+    session.answers.append({
+        "question": question,
+        "answer": request.answer,
+        "self_diagnosis": request.self_diagnosis or "",
+    })
 
-    current_question_number = session.question_number
+    session.evaluations.append(evaluation)
 
-    current_day = session.current_curriculum_day
+    current_number = session.question_number
 
-    session.answers.append(
-        {
-            "question_number": current_question_number,
-            "answer": request.answer,
-            "curriculum_day": current_day,
-        }
-    )
+    # ========================================================
+    # FINISH
+    # ========================================================
 
-    session.conversation.append(
-        {
-            "role": "candidate",
-            "content": request.answer,
-            "question_number": current_question_number,
-            "curriculum_day": current_day,
-        }
-    )
-
-    # --------------------------------------------------------
-    # Evaluation
-    #
-    # We intentionally keep this compatible with the current
-    # InterviewAgent. The evaluator can be connected here
-    # once its final interface is locked.
-    # --------------------------------------------------------
-
-    previous_evaluation = None
-
-    if session.evaluations:
-        previous_evaluation = session.evaluations[-1]
-
-    # --------------------------------------------------------
-    # Check whether this was question 8
-    # --------------------------------------------------------
-
-    if current_question_number >= 8:
+    if current_number >= 10:
 
         session.completed = True
 
+        scores = [
+            e.get("score", 0)
+            for e in session.evaluations
+        ]
+
+        overall = round(
+            sum(scores) / len(scores),
+            1
+        ) if scores else 0
+
+        strengths = []
+
+        weak_areas = []
+
+        for e in session.evaluations:
+
+            strengths.extend(
+                e.get("strengths", [])
+            )
+
+            weak_areas.extend(
+                e.get("weak_areas", [])
+            )
+
+        # remove duplicates
+
+        strengths = list(dict.fromkeys(strengths))[:5]
+
+        weak_areas = list(
+            dict.fromkeys(weak_areas)
+        )[:5]
+
+        scorecard = {
+            "overall_score": overall,
+            "total_questions": 10,
+            "strengths": strengths,
+            "weak_areas": weak_areas,
+            "date": datetime.now().strftime(
+                "%d %B %Y"
+            ),
+            "mode": session.mode,
+            "language": session.language,
+        }
+
         session_store.update(session)
 
-        print(
-            f"[INTERVIEW COMPLETE] "
-            f"id={session.session_id}"
-        )
-
-        return AnswerResponse(
-            session_id=session.session_id,
-            question="Interview completed.",
-            curriculum_day=current_day or 0,
-            question_number=8,
-            interview_completed=True,
-        )
-
-    # --------------------------------------------------------
-    # Next question number
-    # --------------------------------------------------------
-
-    next_question_number = current_question_number + 1
-
-    # --------------------------------------------------------
-    # Candidate
-    # --------------------------------------------------------
-
-    candidate = get_candidate(
-        session.candidate_id
-    )
-
-    # --------------------------------------------------------
-    # Curriculum
-    # --------------------------------------------------------
-
-    curriculum = load_curriculum()
-
-    # --------------------------------------------------------
-    # Choose next topic
-    # --------------------------------------------------------
-
-    topic = choose_topic(
-        curriculum=curriculum,
-        candidate=candidate,
-        question_number=next_question_number,
-    )
-
-    curriculum_day = get_day_number(topic)
-
-    # --------------------------------------------------------
-    # Generate adaptive question
-    # --------------------------------------------------------
-
-    try:
-
-        question = interview_agent.generate_question(
-            candidate=candidate,
-            topic=topic,
-            question_number=next_question_number,
-            conversation=session.conversation,
-            previous_evaluation=previous_evaluation,
-        )
-
-    except Exception as exc:
-
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to generate next question: {exc}",
-        )
-
-    # --------------------------------------------------------
-    # Update session
-    # --------------------------------------------------------
-
-    session.question_number = next_question_number
-
-    session.current_question = question
-
-    session.current_curriculum_day = curriculum_day
-
-    if curriculum_day not in session.curriculum_days:
-
-        session.curriculum_days.append(
-            curriculum_day
-        )
-
-    session.questions.append(
-        {
-            "question_number": next_question_number,
-            "question": question,
-            "curriculum_day": curriculum_day,
+        return {
+            "completed": True,
+            "evaluation": evaluation,
+            "scorecard": scorecard,
         }
-    )
-
-    session.conversation.append(
-        {
-            "role": "interviewer",
-            "content": question,
-            "question_number": next_question_number,
-            "curriculum_day": curriculum_day,
-        }
-    )
 
     # ========================================================
-    # IMPORTANT:
-    # Persist updated session in the SAME store.
+    # NEXT QUESTION
     # ========================================================
+
+    next_number = current_number + 1
+
+    next_question = None
+
+    # Resume/skill-aware question generation
+
+    if session.skills:
+
+        skill_context = ", ".join(
+            session.skills
+        )
+
+        next_prompt = f"""
+You are a technical interviewer.
+
+{language_instruction(session.language)}
+
+{persona_instruction(session.persona)}
+
+Candidate skills:
+{skill_context}
+
+Previous question:
+{question}
+
+Candidate answer:
+{request.answer}
+
+Generate technical interview question number
+{next_number} of 10.
+
+Focus on the candidate's skills.
+
+Return ONLY the question.
+"""
+
+        next_question = call_ollama(
+            next_prompt
+        )
+
+    if not next_question:
+
+        if next_number <= len(DEFAULT_QUESTIONS):
+            next_question = DEFAULT_QUESTIONS[
+                next_number - 1
+            ]
+        else:
+            next_question = DEFAULT_QUESTIONS[-1]
+
+    session.question_number = next_number
+
+    session.current_question = next_question
+
+    session.questions.append({
+        "number": next_number,
+        "question": next_question,
+    })
 
     session_store.update(session)
 
-    print(
-        f"[QUESTION GENERATED] "
-        f"id={session.session_id} "
-        f"question={next_question_number} "
-        f"day={curriculum_day}"
-    )
-
-    return AnswerResponse(
-        session_id=session.session_id,
-        question=question,
-        curriculum_day=curriculum_day,
-        question_number=next_question_number,
-        interview_completed=False,
-    )
+    return {
+        "completed": False,
+        "evaluation": evaluation,
+        "question_number": next_number,
+        "total_questions": 10,
+        "question": next_question,
+    }
 
 
 # ============================================================
-# DEBUG SESSION ENDPOINT
+# RESUME UPLOAD
 # ============================================================
 
-
-@router.get("/session/{session_id}")
-def get_session_debug(
-    session_id: str,
+@router.post("/resume/upload")
+async def upload_resume(
+    file: UploadFile = File(...)
 ):
 
-    session = session_store.get(session_id)
+    filename = file.filename or ""
 
-    if session is None:
+    content = await file.read()
+
+    text = ""
+
+    try:
+
+        if filename.lower().endswith(".pdf"):
+
+            from pypdf import PdfReader
+            import io
+
+            reader = PdfReader(
+                io.BytesIO(content)
+            )
+
+            text = "\n".join(
+                page.extract_text() or ""
+                for page in reader.pages
+            )
+
+        elif filename.lower().endswith(".docx"):
+
+            from docx import Document
+            import io
+
+            document = Document(
+                io.BytesIO(content)
+            )
+
+            text = "\n".join(
+                paragraph.text
+                for paragraph in document.paragraphs
+            )
+
+        else:
+
+            raise HTTPException(
+                status_code=400,
+                detail="Only PDF and DOCX files are supported."
+            )
+
+    except HTTPException:
+        raise
+
+    except Exception as e:
 
         raise HTTPException(
-            status_code=404,
-            detail="Interview session not found.",
+            status_code=400,
+            detail=f"Could not read resume: {str(e)}"
         )
 
+    # ========================================================
+    # SKILL EXTRACTION
+    # ========================================================
+
+    known_skills = [
+        "Python",
+        "Java",
+        "JavaScript",
+        "React",
+        "Node.js",
+        "FastAPI",
+        "Django",
+        "SQL",
+        "PostgreSQL",
+        "MongoDB",
+        "Docker",
+        "Kubernetes",
+        "AWS",
+        "Azure",
+        "GCP",
+        "Git",
+        "GitHub",
+        "Machine Learning",
+        "Artificial Intelligence",
+        "AI",
+        "Deep Learning",
+        "NLP",
+        "RAG",
+        "LangChain",
+        "Vector Database",
+        "Redis",
+        "C++",
+        "C",
+        "TypeScript",
+    ]
+
+    lower_text = text.lower()
+
+    skills = [
+        skill
+        for skill in known_skills
+        if skill.lower() in lower_text
+    ]
+
+    # If LLM available, improve skill extraction
+
+    prompt = f"""
+Extract technical skills from this resume.
+
+Resume:
+{text[:12000]}
+
+Return ONLY a JSON array of strings.
+Example:
+["Python", "React", "Docker"]
+"""
+
+    raw = call_ollama(prompt)
+
+    if raw:
+
+        try:
+
+            cleaned = raw
+
+            if "```" in cleaned:
+                cleaned = re.sub(
+                    r"```(?:json)?",
+                    "",
+                    cleaned
+                ).replace("```", "").strip()
+
+            ai_skills = json.loads(cleaned)
+
+            if isinstance(ai_skills, list):
+
+                for skill in ai_skills:
+
+                    if skill not in skills:
+                        skills.append(skill)
+
+        except Exception:
+            pass
+
     return {
-        "session_id": session.session_id,
-        "candidate_id": session.candidate_id,
-        "question_number": session.question_number,
-        "current_question": session.current_question,
-        "current_curriculum_day": session.current_curriculum_day,
-        "curriculum_days": session.curriculum_days,
-        "questions_asked": len(session.questions),
-        "answers_received": len(session.answers),
-        "evaluations": len(session.evaluations),
-        "completed": session.completed,
-        "conversation_length": len(session.conversation),
+        "filename": filename,
+        "text": text,
+        "skills": skills,
+        "message": "Resume analyzed successfully."
     }

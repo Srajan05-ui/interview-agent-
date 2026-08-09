@@ -5,6 +5,7 @@ from app.services.prompt_builder import PromptBuilder
 class InterviewAgent:
 
     def __init__(self):
+
         self.llm = LLMService()
 
     def generate_question(
@@ -14,18 +15,24 @@ class InterviewAgent:
         question_number: int,
         conversation: list[dict],
         previous_evaluation: dict | None = None,
+        language: str = "English",
     ) -> str:
 
-        prompt = PromptBuilder.build_question_prompt(
-            candidate=candidate,
-            topic=topic,
-            question_number=question_number,
-            conversation=conversation,
-            previous_evaluation=previous_evaluation,
+        prompt = (
+            PromptBuilder.build_question_prompt(
+                candidate=candidate,
+                topic=topic,
+                question_number=question_number,
+                conversation=conversation,
+                previous_evaluation=previous_evaluation,
+                language=language,
+            )
         )
 
         question = self.llm.generate(
-            system_prompt=PromptBuilder.SYSTEM_PROMPT,
+            system_prompt=(
+                PromptBuilder.SYSTEM_PROMPT
+            ),
             user_prompt=prompt,
             temperature=0.5,
         )
