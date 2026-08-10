@@ -1,11 +1,37 @@
 import { useState } from "react";
+import { useAuth } from "./contexts/AuthContext";
+import LoginPage from "./components/LoginPage";
 import CandidateSetup from "./components/CandidateSetup";
 import InterviewUI from "./components/InterviewUI";
 import ResultsDashboard from "./components/ResultsDashboard";
 
 function App() {
+
+  const { user, loading, logout } = useAuth();
+
   const [screen, setScreen] = useState("landing");
   const [interviewData, setInterviewData] = useState(null);
+
+  // --------------------------------------------------
+  // AUTH LOADING
+  // --------------------------------------------------
+
+  if (loading) {
+    return (
+      <div className="auth-loading-screen">
+        <div className="auth-loading-spinner"></div>
+        <p>Loading…</p>
+      </div>
+    );
+  }
+
+  // --------------------------------------------------
+  // NOT LOGGED IN
+  // --------------------------------------------------
+
+  if (!user) {
+    return <LoginPage />;
+  }
 
   // --------------------------------------------------
   // START INTERVIEW
@@ -13,7 +39,6 @@ function App() {
 
   function handleStartInterview(data) {
     console.log("Interview started:", data);
-
     setInterviewData(data);
     setScreen("interview");
   }
@@ -46,6 +71,7 @@ function App() {
   if (screen === "setup") {
     return (
       <CandidateSetup
+        user={user}
         onBack={() => setScreen("landing")}
         onStart={handleStartInterview}
       />
@@ -73,7 +99,8 @@ function App() {
   if (screen === "results") {
     return (
       <ResultsDashboard
-        data={interviewData}
+        evaluation={interviewData?.results || {}}
+        interviewData={interviewData}
         onRestart={() => setScreen("setup")}
       />
     );
@@ -109,9 +136,36 @@ function App() {
           </div>
         </div>
 
-        <div className="header-status">
-          <span className="status-dot"></span>
-          System Ready
+        {/* User profile + logout */}
+        <div className="header-user">
+
+          <div className="header-user-info">
+            {user.photoURL && (
+              <img
+                className="header-avatar"
+                src={user.photoURL}
+                alt=""
+                referrerPolicy="no-referrer"
+              />
+            )}
+
+            {!user.photoURL && (
+              <div className="header-avatar-fallback">
+                {(user.displayName || user.email || "U").charAt(0).toUpperCase()}
+              </div>
+            )}
+
+            <span className="header-user-name">
+              {user.displayName || user.email || "User"}
+            </span>
+          </div>
+
+          <button
+            className="header-logout-button"
+            onClick={logout}
+          >
+            Sign out
+          </button>
         </div>
 
       </header>

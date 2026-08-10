@@ -1,74 +1,94 @@
 import { useRef, useState } from "react";
 import { uploadResume, startInterview } from "../services/api";
+import History from "./History";
+
+
+// =========================================================
+// ALL SUPPORTED LANGUAGES
+// =========================================================
+
+const ALL_LANGUAGES = [
+  { id: "english",    title: "English",     native: "English",    description: "Professional English interview" },
+  { id: "hindi",      title: "Hindi",       native: "हिंदी",       description: "Interview in Hindi" },
+  { id: "hinglish",   title: "Hinglish",    native: "Hinglish",   description: "Hindi + English mix" },
+  { id: "spanish",    title: "Spanish",     native: "Español",    description: "Interview in Spanish" },
+  { id: "french",     title: "French",      native: "Français",   description: "Interview in French" },
+  { id: "german",     title: "German",      native: "Deutsch",    description: "Interview in German" },
+  { id: "japanese",   title: "Japanese",    native: "日本語",      description: "Interview in Japanese" },
+  { id: "chinese",    title: "Chinese",     native: "中文",        description: "Interview in Chinese" },
+  { id: "korean",     title: "Korean",      native: "한국어",      description: "Interview in Korean" },
+  { id: "arabic",     title: "Arabic",      native: "العربية",    description: "Interview in Arabic" },
+  { id: "portuguese", title: "Portuguese",  native: "Português",  description: "Interview in Portuguese" },
+  { id: "russian",    title: "Russian",     native: "Русский",    description: "Interview in Russian" },
+  { id: "tamil",      title: "Tamil",       native: "தமிழ்",       description: "Interview in Tamil" },
+  { id: "telugu",     title: "Telugu",      native: "తెలుగు",      description: "Interview in Telugu" },
+  { id: "bengali",    title: "Bengali",     native: "বাংলা",       description: "Interview in Bengali" },
+];
+
+
+// =========================================================
+// COMPONENT
+// =========================================================
 
 function CandidateSetup({ onStart, onBack }) {
   const fileInputRef = useRef(null);
 
-  const [candidateId, setCandidateId] = useState(
-    localStorage.getItem("candidate_id") || "CAND-001"
-  );
+  // Automatically assign UUID for Candidate ID if not present
+  const [candidateId] = useState(() => {
+    let id = localStorage.getItem("candidate_id");
+    if (!id) {
+      id = "CAND-" + Math.random().toString(36).substr(2, 9).toUpperCase();
+      localStorage.setItem("candidate_id", id);
+    }
+    return id;
+  });
 
-  const [language, setLanguage] = useState(
-    localStorage.getItem("interview_language") || "english"
-  );
+  const [language, setLanguage] = useState("english");
+  const [mode, setMode] = useState("Technical");
+
+  const [langDropdownOpen, setLangDropdownOpen] = useState(false);
+  const [langSearch, setLangSearch] = useState("");
 
   const [resume, setResume] = useState(null);
+  const [resumeText, setResumeText] = useState("");
   const [resumeUploading, setResumeUploading] = useState(false);
   const [resumeMessage, setResumeMessage] = useState("");
+  const [atsScore, setAtsScore] = useState(null);
+  const [atsFeedback, setAtsFeedback] = useState("");
 
   const [error, setError] = useState("");
   const [starting, setStarting] = useState(false);
 
-  const languages = [
-    {
-      id: "english",
-      title: "English",
-      description: "Professional English interview",
-    },
-    {
-      id: "hindi",
-      title: "हिंदी",
-      description: "Interview in Hindi",
-    },
-    {
-      id: "hinglish",
-      title: "Hinglish",
-      description: "Natural Hindi + English terms",
-    },
-  ];
+  // -------------------------------------------------------
+  // Language
+  // -------------------------------------------------------
 
-  /* =====================================================
-     LANGUAGE
-  ===================================================== */
+  const selectedLang =
+    ALL_LANGUAGES.find((l) => l.id === language) || ALL_LANGUAGES[0];
 
-  function handleLanguageChange(value) {
-    setLanguage(value);
+  const filteredLanguages = langSearch.trim()
+    ? ALL_LANGUAGES.filter(
+        (l) =>
+          l.title.toLowerCase().includes(langSearch.toLowerCase()) ||
+          l.native.toLowerCase().includes(langSearch.toLowerCase())
+      )
+    : ALL_LANGUAGES;
 
-    localStorage.setItem("interview_language", value);
+  function selectLanguage(id) {
+    setLanguage(id);
+    setLangDropdownOpen(false);
+    setLangSearch("");
+    localStorage.setItem("interview_language", id);
   }
 
-  /* =====================================================
-     CANDIDATE ID
-  ===================================================== */
+  // -------------------------------------------------------
+  // Resume
+  // -------------------------------------------------------
 
-  function handleCandidateIdChange(event) {
-    const value = event.target.value;
-
-    setCandidateId(value);
-
-    localStorage.setItem("candidate_id", value);
-  }
-
-  /* =====================================================
-     RESUME
-  ===================================================== */
-
-  function handleResumeChange(event) {
+  async function handleResumeChange(event) {
     const file = event.target.files?.[0];
 
-    if (!file) {
-      return;
-    }
+    if (!file) return;
 
     const extension = file.name.toLowerCase().split(".").pop();
 
@@ -76,90 +96,64 @@ function CandidateSetup({ onStart, onBack }) {
       setError("Please upload a PDF, DOC or DOCX resume.");
       setResume(null);
       setResumeMessage("");
+      setAtsScore(null);
+      setAtsFeedback("");
       return;
     }
 
     setError("");
     setResume(file);
+    setResumeMessage("Uploading resume to analyze ATS score...");
+    setResumeUploading(true);
 
-    setResumeMessage(
-      "Resume selected. It will be used to personalize your interview."
-    );
+    try {
+      const resumeResponse = await uploadResume(file, candidateId);
+
+      if (resumeResponse?.success === false) {
+        setResumeMessage(
+          "Resume selected. Interview will continue without resume analysis."
+        );
+      } else {
+        setResumeMessage(
+          "Resume analyzed successfully. Interview personalized."
+        );
+        if (resumeResponse.text) {
+          setResumeText(resumeResponse.text);
+        }
+        if (resumeResponse.ats_score !== undefined) {
+          setAtsScore(resumeResponse.ats_score);
+          setAtsFeedback(resumeResponse.ats_feedback || "");
+        }
+      }
+    } catch (resumeError) {
+      console.warn("Resume upload unavailable:", resumeError);
+      setResumeMessage(
+        "Resume selected. Interview will continue normally."
+      );
+    } finally {
+      setResumeUploading(false);
+    }
   }
 
   function openFilePicker() {
     fileInputRef.current?.click();
   }
 
-  /* =====================================================
-     START INTERVIEW
-  ===================================================== */
+  // -------------------------------------------------------
+  // Start Interview
+  // -------------------------------------------------------
 
   async function handleStart() {
-    if (!candidateId.trim()) {
-      setError("Please enter a candidate ID.");
-      return;
-    }
-
     setError("");
     setStarting(true);
 
     try {
-      localStorage.setItem("candidate_id", candidateId);
-      localStorage.setItem("interview_language", language);
-
-      /*
-       * Resume upload is optional.
-       *
-       * If the backend has the resume endpoint,
-       * it will be uploaded.
-       *
-       * If it doesn't, the interview will still start.
-       */
-
-      if (resume) {
-        setResumeUploading(true);
-
-        setResumeMessage("Uploading resume...");
-
-        try {
-          const resumeResponse = await uploadResume(
-            resume,
-            candidateId
-          );
-
-          if (resumeResponse?.success === false) {
-            setResumeMessage(
-              "Resume selected. Interview will continue without resume analysis."
-            );
-          } else {
-            setResumeMessage(
-              "Resume uploaded successfully. Interview personalized."
-            );
-          }
-        } catch (resumeError) {
-          console.warn("Resume upload unavailable:", resumeError);
-
-          setResumeMessage(
-            "Resume selected. Interview will continue normally."
-          );
-        } finally {
-          setResumeUploading(false);
-        }
-      }
-
-      /*
-       * Start the interview.
-       */
-
       const response = await startInterview({
         candidate_id: candidateId,
-        language: language,
+        language,
+        mode,
+        resume_text: resumeText,
       });
-
-      /*
-       * Store session ID.
-       */
 
       if (response?.session_id) {
         localStorage.setItem(
@@ -168,29 +162,19 @@ function CandidateSetup({ onStart, onBack }) {
         );
       }
 
-      /*
-       * Store interview information.
-       */
-
-      localStorage.setItem(
-        "interview_candidate_id",
-        candidateId
-      );
-
-      localStorage.setItem(
-        "interview_language",
-        language
-      );
+      localStorage.setItem("interview_candidate_id", candidateId);
+      localStorage.setItem("interview_language", language);
 
       onStart({
         candidateId,
         language,
+        mode,
         resume,
+        resumeText,
         session: response,
       });
     } catch (err) {
       console.error("START INTERVIEW ERROR:", err);
-
       setError(
         err?.message ||
           "Unable to start interview. Please make sure the FastAPI backend is running."
@@ -200,9 +184,9 @@ function CandidateSetup({ onStart, onBack }) {
     }
   }
 
-  /* =====================================================
-     UI
-  ===================================================== */
+  // -------------------------------------------------------
+  // UI
+  // -------------------------------------------------------
 
   return (
     <main className="setup-page">
@@ -241,38 +225,9 @@ function CandidateSetup({ onStart, onBack }) {
 
       </section>
 
-      {/* CANDIDATE */}
-
-      <section className="setup-card">
-
-        <div className="section-label">
-          CANDIDATE
-        </div>
-
-        <h2>Candidate details</h2>
-
-        <p className="section-description">
-          Enter your candidate ID to begin your personalized
-          interview session.
-        </p>
-
-        <label className="input-label">
-          Candidate ID
-        </label>
-
-        <input
-          className="setup-input"
-          value={candidateId}
-          onChange={handleCandidateIdChange}
-          placeholder="CAND-001"
-          disabled={starting}
-        />
-
-      </section>
-
       {/* RESUME */}
 
-      <section className="setup-card">
+      <section className="setup-card setup-card-animated">
 
         <div className="section-label">
           RESUME ANALYSIS
@@ -304,20 +259,12 @@ function CandidateSetup({ onStart, onBack }) {
             {resume ? (
               <>
                 <strong>{resume.name}</strong>
-
-                <span>
-                  Resume selected
-                </span>
+                <span>Resume selected</span>
               </>
             ) : (
               <>
-                <strong>
-                  Upload your resume
-                </strong>
-
-                <span>
-                  PDF, DOC or DOCX
-                </span>
+                <strong>Upload your resume</strong>
+                <span>PDF, DOC or DOCX</span>
               </>
             )}
 
@@ -340,11 +287,18 @@ function CandidateSetup({ onStart, onBack }) {
           </div>
         )}
 
+        {atsScore !== null && (
+          <div className="ats-score-box" style={{ marginTop: "1rem", padding: "1rem", backgroundColor: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "8px" }}>
+            <h3 style={{ margin: "0 0 0.5rem 0", color: "#166534" }}>ATS Score: {atsScore}/100</h3>
+            <p style={{ margin: 0, color: "#15803d", fontSize: "0.9rem" }}>{atsFeedback}</p>
+          </div>
+        )}
+
       </section>
 
-      {/* LANGUAGE */}
+      {/* LANGUAGE — SCROLLABLE DROPDOWN */}
 
-      <section className="setup-card">
+      <section className="setup-card setup-card-animated" style={{ zIndex: 10 }}>
 
         <div className="section-label">
           INTERVIEW LANGUAGE
@@ -354,44 +308,140 @@ function CandidateSetup({ onStart, onBack }) {
 
         <p className="section-description">
           Questions and AI evaluation will use your selected
-          language.
+          language. Choose from 15+ supported languages.
         </p>
 
-        <div className="language-grid">
+        <div className="lang-dropdown-wrapper">
 
-          {languages.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              className={`language-option ${
-                language === item.id
-                  ? "selected"
-                  : ""
-              }`}
-              onClick={() =>
-                handleLanguageChange(item.id)
-              }
-              disabled={starting}
-            >
-
-              <strong>
-                {item.title}
-              </strong>
-
-              <span>
-                {item.description}
+          {/* Trigger button */}
+          <button
+            type="button"
+            className="lang-dropdown-trigger"
+            onClick={() => setLangDropdownOpen(!langDropdownOpen)}
+            disabled={starting}
+          >
+            <div className="lang-trigger-content">
+              <span className="lang-trigger-native">
+                {selectedLang.native}
               </span>
 
-            </button>
-          ))}
+              <span className="lang-trigger-title">
+                {selectedLang.title}
+              </span>
+            </div>
+
+            <span className={`lang-trigger-arrow ${langDropdownOpen ? "open" : ""}`}>
+              ▾
+            </span>
+          </button>
+
+          {/* Dropdown panel */}
+          {langDropdownOpen && (
+            <div className="lang-dropdown-panel">
+
+              {/* Search */}
+              <div className="lang-search-box">
+                <input
+                  type="text"
+                  className="lang-search-input"
+                  placeholder="Search language..."
+                  value={langSearch}
+                  onChange={(e) => setLangSearch(e.target.value)}
+                  autoFocus
+                />
+              </div>
+
+              {/* Scrollable list */}
+              <div className="lang-dropdown-list">
+
+                {filteredLanguages.length === 0 && (
+                  <div className="lang-no-results">
+                    No languages found
+                  </div>
+                )}
+
+                {filteredLanguages.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    className={`lang-dropdown-item ${
+                      language === item.id ? "lang-selected" : ""
+                    }`}
+                    onClick={() => selectLanguage(item.id)}
+                  >
+                    <span className="lang-item-native">
+                      {item.native}
+                    </span>
+
+                    <span className="lang-item-title">
+                      {item.title}
+                    </span>
+
+                    <span className="lang-item-desc">
+                      {item.description}
+                    </span>
+
+                    {language === item.id && (
+                      <span className="lang-item-check">✓</span>
+                    )}
+                  </button>
+                ))}
+
+              </div>
+
+            </div>
+          )}
 
         </div>
 
       </section>
 
+      {/* MODE */}
+
+      <section className="setup-card setup-card-animated">
+        <div className="section-label">INTERVIEW MODE</div>
+        <h2>Select Interview Type</h2>
+        <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
+          <button 
+            type="button"
+            onClick={() => setMode("Technical")}
+            style={{ 
+              flex: 1, 
+              padding: "15px", 
+              borderRadius: "10px", 
+              border: `2px solid ${mode === "Technical" ? "#628cf1" : "#293750"}`,
+              background: mode === "Technical" ? "rgba(98, 140, 241, 0.1)" : "#080e18",
+              color: mode === "Technical" ? "#7fa5ff" : "#edf3fb",
+              fontWeight: 600,
+              cursor: "pointer",
+              transition: "all 0.2s"
+            }}
+          >
+            Technical Interview
+          </button>
+          <button 
+            type="button"
+            onClick={() => setMode("Coding")}
+            style={{ 
+              flex: 1, 
+              padding: "15px", 
+              borderRadius: "10px", 
+              border: `2px solid ${mode === "Coding" ? "#628cf1" : "#293750"}`,
+              background: mode === "Coding" ? "rgba(98, 140, 241, 0.1)" : "#080e18",
+              color: mode === "Coding" ? "#7fa5ff" : "#edf3fb",
+              fontWeight: 600,
+              cursor: "pointer",
+              transition: "all 0.2s"
+            }}
+          >
+            Coding Interview
+          </button>
+        </div>
+      </section>
+
       {/* FOCUS */}
 
-      <section className="setup-card">
+      <section className="setup-card setup-card-animated">
 
         <div className="section-label">
           INTERVIEW FOCUS
@@ -409,6 +459,18 @@ function CandidateSetup({ onStart, onBack }) {
 
         </div>
 
+      </section>
+
+      {/* HISTORY */}
+
+      <section className="setup-card setup-card-animated">
+        <div className="section-label">
+          PAST INTERVIEWS
+        </div>
+        <h2>Your History</h2>
+        <div style={{ marginTop: "1rem" }}>
+          <History candidateId={candidateId} />
+        </div>
       </section>
 
       {/* ERROR */}

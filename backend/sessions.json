@@ -1,0 +1,108 @@
+{
+  "7fd3c29c-3e29-4368-a418-ef67f73d9967": {
+    "session_id": "7fd3c29c-3e29-4368-a418-ef67f73d9967",
+    "candidate_id": "CAND-001",
+    "language": "english",
+    "mode": "Coding",
+    "persona": "Friendly",
+    "question_number": 2,
+    "current_question": "What is the difference between a list, tuple and set in Python?",
+    "questions": [
+      {
+        "number": 1,
+        "question": "Explain how you would create and manage a Python virtual environment for a project."
+      },
+      {
+        "number": 2,
+        "question": "What is the difference between a list, tuple and set in Python?"
+      }
+    ],
+    "answers": [
+      {
+        "question": "Explain how you would create and manage a Python virtual environment for a project.",
+        "answer": "print(\"Hello world\")",
+        "self_diagnosis": ""
+      }
+    ],
+    "evaluations": [
+      {
+        "score": 3,
+        "feedback": "The answer is too short. Explain the concept with more technical detail and an example.",
+        "strengths": [
+          "Attempted the question"
+        ],
+        "weak_areas": [
+          "Insufficient technical explanation"
+        ],
+        "ideal_answer": "A strong answer should clearly explain the main concept in the question 'Explain how you would create and manage a Python virtual environment for a project.', describe why it is used, mention important trade-offs, and provide a practical example."
+      }
+    ],
+    "resume_text": "EXAMPLE RESUME \nJane Doe \n234 FAKE STREET. MODESlO, CA, 71234 fake@rake.com 202.202.2020 \nOBJECTIVE \nO>nsdentious and honest tfigh School student seeks employment,, wllllng to diligently follow guidelines and \ndirections. Will work hard to achieve employer objectives and snats. \nEDUCATION \nO>nsdentious a~ ~est Hl'Bh School studentseeks~ wllllng to diligently follow guldeJi~ and \ndirections. Willwork hard to achieve employer objectives and goals. \nJUNIOR AT MODESTO CENTRAL HIGH SCHOOL, MODESTO, CA \n\u2022GPA3.5 \n\u2022 Honor Roll Student \n\u2022 Classes taken: Pre-Calculus, AP English, Spanish., Industrial Engineering \nACHIEVEMENTS., HONORS AND ACTIVITIES \n\u2022 Honors: National Honor Society, National Merit Scholar \n\u2022 Cubs \n\u2022 Oinic:sfor a Cause: Co-founder, President \n\u25a0 Political Sc:ience \n\u2022 Robotics \n\u2022 Athletics \n\u2022 Intramural Track & Reid \n\u25a0 Varsity Volleyball \n\u2022 N Soccer captain \n\u2022 ActivitieS \n\u2022 Yearbook Committee \n\u2022 Write~ School Newspaper \nWORK EXPERIENCE \nRESIDENTIAL LAWN MOWING\u2022 JUNE 201& TO SEP 201& \n\u2022 Performed residential lawn care- mowing, baaing, weeding and dean-up. \nSALES/CUSTOMER SERVICE \u2022 FEB 2017 - PRESENT \n\u2022 Wrote orders., cashJe~ answered phones, provided customerservk:e. \n' \nVOLUNTEER EXPERIENCE \nPEDIATRIC WARD VOLUNTEER\u2022 MARCH 201& TO MAY 201& \n\u2022 Ent2rtained patients ases 5-15 using arts and crafts,, ran enands for staff. \nLIBRARY VOLUNTEER\u2022 MARCH 2015 TO MAY 2015 \n\u2022 Assist patrons to select materials; operate the cash register; shelve pre-sorted books ",
+    "skills": [],
+    "completed": false,
+    "created_at": "10 August 2026 23:57"
+  },
+  "13fbc35a-c8c4-4b5a-97a0-de99bd0b9d34": {
+    "session_id": "13fbc35a-c8c4-4b5a-97a0-de99bd0b9d34",
+    "candidate_id": "CAND-001",
+    "language": "english",
+    "mode": "Coding",
+    "persona": "Friendly",
+    "question_number": 1,
+    "current_question": "Explain how you would create and manage a Python virtual environment for a project.",
+    "questions": [
+      {
+        "number": 1,
+        "question": "Explain how you would create and manage a Python virtual environment for a project."
+      }
+    ],
+    "answers": [],
+    "evaluations": [],
+    "resume_text": "EXAMPLE RESUME \nJane Doe \n234 FAKE STREET. MODESlO, CA, 71234 fake@rake.com 202.202.2020 \nOBJECTIVE \nO>nsdentious and honest tfigh School student seeks employment,, wllllng to diligently follow guidelines and \ndirections. Will work hard to achieve employer objectives and snats. \nEDUCATION \nO>nsdentious a~ ~est Hl'Bh School studentseeks~ wllllng to diligently follow guldeJi~ and \ndirections. Willwork hard to achieve employer objectives and goals. \nJUNIOR AT MODESTO CENTRAL HIGH SCHOOL, MODESTO, CA \n\u2022GPA3.5 \n\u2022 Honor Roll Student \n\u2022 Classes taken: Pre-Calculus, AP English, Spanish., Industrial Engineering \nACHIEVEMENTS., HONORS AND ACTIVITIES \n\u2022 Honors: National Honor Society, National Merit Scholar \n\u2022 Cubs \n\u2022 Oinic:sfor a Cause: Co-founder, President \n\u25a0 Political Sc:ience \n\u2022 Robotics \n\u2022 Athletics \n\u2022 Intramural Track & Reid \n\u25a0 Varsity Volleyball \n\u2022 N Soccer captain \n\u2022 ActivitieS \n\u2022 Yearbook Committee \n\u2022 Write~ School Newspaper \nWORK EXPERIENCE \nRESIDENTIAL LAWN MOWING\u2022 JUNE 201& TO SEP 201& \n\u2022 Performed residential lawn care- mowing, baaing, weeding and dean-up. \nSALES/CUSTOMER SERVICE \u2022 FEB 2017 - PRESENT \n\u2022 Wrote orders., cashJe~ answered phones, provided customerservk:e. \n' \nVOLUNTEER EXPERIENCE \nPEDIATRIC WARD VOLUNTEER\u2022 MARCH 201& TO MAY 201& \n\u2022 Ent2rtained patients ases 5-15 using arts and crafts,, ran enands for staff. \nLIBRARY VOLUNTEER\u2022 MARCH 2015 TO MAY 2015 \n\u2022 Assist patrons to select materials; operate the cash register; shelve pre-sorted books ",
+    "skills": [],
+    "completed": false,
+    "created_at": "10 August 2026 23:59"
+  },
+  "d17905ff-1d2a-46d4-9925-a0f3c3b85bd4": {
+    "session_id": "d17905ff-1d2a-46d4-9925-a0f3c3b85bd4",
+    "candidate_id": "CAND-001",
+    "language": "english",
+    "mode": "Technical",
+    "persona": "Friendly",
+    "question_number": 1,
+    "current_question": "Explain how you would create and manage a Python virtual environment for a project.",
+    "questions": [
+      {
+        "number": 1,
+        "question": "Explain how you would create and manage a Python virtual environment for a project."
+      }
+    ],
+    "answers": [],
+    "evaluations": [],
+    "resume_text": "",
+    "skills": [],
+    "completed": false,
+    "created_at": "11 August 2026 00:12"
+  },
+  "8d4af508-3b72-4825-a9d6-eacf2ea69662": {
+    "session_id": "8d4af508-3b72-4825-a9d6-eacf2ea69662",
+    "candidate_id": "CAND-001",
+    "language": "english",
+    "mode": "Coding",
+    "persona": "Friendly",
+    "question_number": 1,
+    "current_question": "Write a function to reverse a string without using built-in reverse methods. Explain the time and space complexity.",
+    "questions": [
+      {
+        "number": 1,
+        "question": "Write a function to reverse a string without using built-in reverse methods. Explain the time and space complexity."
+      }
+    ],
+    "answers": [],
+    "evaluations": [],
+    "resume_text": "",
+    "skills": [],
+    "completed": false,
+    "created_at": "11 August 2026 00:12"
+  }
+}

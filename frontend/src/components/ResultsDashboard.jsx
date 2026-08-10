@@ -1,7 +1,11 @@
+import { useState } from "react";
 import ProgressBar from "./ProgressBar";
+import ReactMarkdown from "react-markdown";
+import { generateRoadmap, improveResume } from "../services/api";
 
 function ResultDashboard({
   evaluation = {},
+  interviewData = {},
   onRestart,
 }) {
   const {
@@ -15,6 +19,51 @@ function ResultDashboard({
     improvement_plan = [],
     topic_breakdown = [],
   } = evaluation;
+
+  const [activeTab, setActiveTab] = useState("scorecard");
+  const [roadmap, setRoadmap] = useState("");
+  const [roadmapLoading, setRoadmapLoading] = useState(false);
+  const [improvedResume, setImprovedResume] = useState("");
+  const [resumeLoading, setResumeLoading] = useState(false);
+
+  const handleGenerateRoadmap = async () => {
+    if (roadmap || roadmapLoading) return;
+    setRoadmapLoading(true);
+    try {
+      const res = await generateRoadmap(weak_areas);
+      if (res?.roadmap) {
+        setRoadmap(res.roadmap);
+      }
+    } catch (err) {
+      console.error(err);
+      setRoadmap("Failed to generate roadmap. Please try again.");
+    } finally {
+      setRoadmapLoading(false);
+    }
+  };
+
+  const handleImproveResume = async () => {
+    if (improvedResume || resumeLoading) return;
+    setResumeLoading(true);
+    try {
+      const res = await improveResume(interviewData.resumeText || "");
+      if (res?.improved_resume) {
+        setImprovedResume(res.improved_resume);
+      }
+    } catch (err) {
+      console.error(err);
+      setImprovedResume("Failed to generate resume. Please try again.");
+    } finally {
+      setResumeLoading(false);
+    }
+  };
+
+  const handleCopyResume = () => {
+    if (improvedResume) {
+      navigator.clipboard.writeText(improvedResume);
+      alert("Resume copied to clipboard!");
+    }
+  };
 
   // ---------------------------------------------------------
   // Convert 0-10 score into percentage
@@ -100,8 +149,21 @@ function ResultDashboard({
 
 
         {/* =================================================
-            OVERALL SCORE
+            TABS
         ================================================= */}
+
+        <nav className="results-tabs">
+          <button className={`tab-button ${activeTab === "scorecard" ? "active" : ""}`} onClick={() => setActiveTab("scorecard")}>Scorecard</button>
+          <button className={`tab-button ${activeTab === "roadmap" ? "active" : ""}`} onClick={() => { setActiveTab("roadmap"); handleGenerateRoadmap(); }}>Learning Roadmap</button>
+          <button className={`tab-button ${activeTab === "resume" ? "active" : ""}`} onClick={() => { setActiveTab("resume"); handleImproveResume(); }}>ATS Resume Maker</button>
+          <button className={`tab-button ${activeTab === "jobs" ? "active" : ""}`} onClick={() => setActiveTab("jobs")}>Job Search</button>
+        </nav>
+
+        {activeTab === "scorecard" && (
+          <>
+            {/* =================================================
+                OVERALL SCORE
+            ================================================= */}
 
         <section className="overall-score-card">
 
@@ -510,6 +572,89 @@ function ResultDashboard({
 
         )}
 
+
+          </>
+        )}
+
+        {/* =================================================
+            TAB: AI LEARNING ROADMAP
+        ================================================= */}
+
+        {activeTab === "roadmap" && (
+          <section className="roadmap-section" style={{ padding: "2rem", borderRadius: "8px", border: "1px solid #293750", marginTop: "2rem", backgroundColor: "#080e18" }}>
+            <h2 style={{ color: "#edf3fb" }}>Day-wise Learning Roadmap</h2>
+            <p style={{ color: "#7fa5ff", marginBottom: "1.5rem" }}>Based on your weak areas: {weak_areas.join(", ") || "None identified"}</p>
+            
+            {roadmapLoading ? (
+              <div style={{ display: "flex", gap: "1rem", alignItems: "center", color: "#7fa5ff" }}>
+                <div className="auth-loading-spinner" style={{ width: "24px", height: "24px", borderWidth: "3px" }}></div>
+                <span>Generating your personalized roadmap... this may take up to 30 seconds.</span>
+              </div>
+            ) : (
+              <div className="markdown-content" style={{ color: "#edf3fb", lineHeight: 1.6, padding: "1.5rem", backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid #293750", borderRadius: "8px" }}>
+                {roadmap ? <ReactMarkdown>{roadmap}</ReactMarkdown> : "No roadmap generated."}
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* =================================================
+            TAB: ATS RESUME MAKER
+        ================================================= */}
+
+        {activeTab === "resume" && (
+          <section className="resume-section" style={{ padding: "2rem", borderRadius: "8px", border: "1px solid #293750", marginTop: "2rem", backgroundColor: "#080e18" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+              <h2 style={{ color: "#edf3fb" }}>ATS-Optimized Resume</h2>
+              {improvedResume && !resumeLoading && (
+                <button onClick={handleCopyResume} className="primary-button" style={{ padding: "0.5rem 1rem", fontSize: "0.9rem" }}>
+                  Copy to Clipboard
+                </button>
+              )}
+            </div>
+            
+            {resumeLoading ? (
+              <div style={{ display: "flex", gap: "1rem", alignItems: "center", color: "#7fa5ff" }}>
+                <div className="auth-loading-spinner" style={{ width: "24px", height: "24px", borderWidth: "3px" }}></div>
+                <span>Rewriting your resume... this may take up to 30 seconds.</span>
+              </div>
+            ) : (
+              <div className="markdown-content" style={{ color: "#edf3fb", lineHeight: 1.6, padding: "1.5rem", backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid #293750", borderRadius: "8px" }}>
+                {improvedResume ? <ReactMarkdown>{improvedResume}</ReactMarkdown> : "Could not generate improved resume."}
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* =================================================
+            TAB: JOB SEARCH
+        ================================================= */}
+
+        {activeTab === "jobs" && (
+          <section className="jobs-section" style={{ padding: "2rem", borderRadius: "8px", border: "1px solid #293750", marginTop: "2rem", backgroundColor: "#080e18" }}>
+            <h2 style={{ color: "#edf3fb" }}>Find Jobs Matching Your Skills</h2>
+            <p style={{ color: "#7fa5ff", marginBottom: "1.5rem" }}>We found these key skills based on your interview: <strong>{(interviewData?.session?.skills || []).join(", ") || "General Software Engineering"}</strong></p>
+            
+            <div style={{ display: "flex", gap: "1rem" }}>
+              <a 
+                href={`https://www.linkedin.com/jobs/search/?keywords=${encodeURIComponent((interviewData?.session?.skills || []).join(" ") || "Software Engineer")}`} 
+                target="_blank" 
+                rel="noreferrer"
+                style={{ flex: 1, padding: "1.5rem", border: "1px solid #628cf1", borderRadius: "8px", textDecoration: "none", color: "#628cf1", fontWeight: "bold", textAlign: "center", backgroundColor: "rgba(98, 140, 241, 0.1)" }}
+              >
+                Search on LinkedIn
+              </a>
+              <a 
+                href={`https://www.naukri.com/${(interviewData?.session?.skills || []).join("-") || "software-engineer"}-jobs`} 
+                target="_blank" 
+                rel="noreferrer"
+                style={{ flex: 1, padding: "1.5rem", border: "1px solid #00f2fe", borderRadius: "8px", textDecoration: "none", color: "#00f2fe", fontWeight: "bold", textAlign: "center", backgroundColor: "rgba(0, 242, 254, 0.1)" }}
+              >
+                Search on Naukri.com
+              </a>
+            </div>
+          </section>
+        )}
 
         {/* =================================================
             ACTIONS

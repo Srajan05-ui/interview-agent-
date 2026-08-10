@@ -1,7 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import { submitAnswer } from "../services/api";
 
-function InterviewUI({ session, candidateId, language, onExit }) {
+function InterviewUI({ interviewData, onExit, onComplete }) {
+
+  // -------------------------------------------------------
+  // Destructure interviewData
+  // -------------------------------------------------------
+
+  const session     = interviewData?.session || interviewData;
+  const candidateId = interviewData?.candidateId || session?.candidate_id || "";
+  const language    = interviewData?.language || session?.language || "english";
+
   const videoRef = useRef(null);
   const streamRef = useRef(null);
 
@@ -34,6 +43,11 @@ function InterviewUI({ session, candidateId, language, onExit }) {
   const [questionNumber, setQuestionNumber] = useState(
     session?.question_number || 1
   );
+
+  const [questionFading, setQuestionFading] = useState(false);
+
+  const [totalSeconds, setTotalSeconds] = useState(0);
+  const [questionSeconds, setQuestionSeconds] = useState(0);
 
   const totalQuestions = session?.total_questions || 10;
 
@@ -69,28 +83,22 @@ function InterviewUI({ session, candidateId, language, onExit }) {
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-
         await videoRef.current.play().catch(() => {});
       }
 
       setCameraOn(true);
     } catch (err) {
       console.error("Camera error:", err);
-
       setCameraOn(false);
 
       if (err.name === "NotAllowedError") {
         setCameraError(
-          "Camera permission denied. Please allow camera access in Chrome."
+          "Camera permission denied. Please allow camera access in your browser settings."
         );
       } else if (err.name === "NotFoundError") {
-        setCameraError(
-          "No camera was found on this device."
-        );
+        setCameraError("No camera was found on this device.");
       } else {
-        setCameraError(
-          "Unable to access your camera."
-        );
+        setCameraError("Unable to access your camera.");
       }
     }
   }
@@ -100,7 +108,6 @@ function InterviewUI({ session, candidateId, language, onExit }) {
       streamRef.current
         .getTracks()
         .forEach((track) => track.stop());
-
       streamRef.current = null;
     }
 
@@ -126,22 +133,18 @@ function InterviewUI({ session, candidateId, language, onExit }) {
   async function startScreenShare() {
     try {
       if (!navigator.mediaDevices?.getDisplayMedia) {
-        setError(
-          "Screen sharing is not supported by this browser."
-        );
+        setError("Screen sharing is not supported by this browser.");
         return;
       }
 
-      const stream =
-        await navigator.mediaDevices.getDisplayMedia({
-          video: true,
-          audio: false,
-        });
+      const stream = await navigator.mediaDevices.getDisplayMedia({
+        video: true,
+        audio: false,
+      });
 
       screenStreamRef.current = stream;
 
-      const videoTrack =
-        stream.getVideoTracks()[0];
+      const videoTrack = stream.getVideoTracks()[0];
 
       if (videoTrack) {
         videoTrack.onended = () => {
@@ -152,15 +155,10 @@ function InterviewUI({ session, candidateId, language, onExit }) {
       setScreenSharing(true);
       setError("");
     } catch (err) {
-      console.error(
-        "Screen share error:",
-        err
-      );
+      console.error("Screen share error:", err);
 
       if (err.name !== "AbortError") {
-        setError(
-          "Unable to start screen sharing."
-        );
+        setError("Unable to start screen sharing.");
       }
     }
   }
@@ -170,7 +168,6 @@ function InterviewUI({ session, candidateId, language, onExit }) {
       screenStreamRef.current
         .getTracks()
         .forEach((track) => track.stop());
-
       screenStreamRef.current = null;
     }
 
@@ -186,15 +183,31 @@ function InterviewUI({ session, candidateId, language, onExit }) {
   }
 
   /* =====================================================
-     MICROPHONE
+     MICROPHONE (Speech-to-Text)
   ===================================================== */
 
   function getSpeechLocale() {
-    if (language === "hindi") {
-      return "hi-IN";
-    }
+    const lang = (language || "english").toLowerCase();
 
-    return "en-IN";
+    const localeMap = {
+      english:    "en-US",
+      hindi:      "hi-IN",
+      hinglish:   "hi-IN",
+      spanish:    "es-ES",
+      french:     "fr-FR",
+      german:     "de-DE",
+      japanese:   "ja-JP",
+      chinese:    "zh-CN",
+      korean:     "ko-KR",
+      arabic:     "ar-SA",
+      portuguese: "pt-BR",
+      russian:    "ru-RU",
+      tamil:      "ta-IN",
+      telugu:     "te-IN",
+      bengali:    "bn-IN",
+    };
+
+    return localeMap[lang] || "en-US";
   }
 
   function createRecognition() {
@@ -206,25 +219,14 @@ function InterviewUI({ session, candidateId, language, onExit }) {
       setError(
         "Speech recognition is not supported. Please use Google Chrome."
       );
-
       return null;
     }
 
-    const recognition =
-      new SpeechRecognition();
+    const recognition = new SpeechRecognition();
 
     recognition.lang = getSpeechLocale();
-
-    /*
-     * Keep microphone active.
-     */
     recognition.continuous = true;
-
-    /*
-     * Only final results are used.
-     */
     recognition.interimResults = false;
-
     recognition.maxAlternatives = 1;
 
     recognition.onstart = () => {
@@ -235,115 +237,56 @@ function InterviewUI({ session, candidateId, language, onExit }) {
     recognition.onresult = (event) => {
       let newText = "";
 
-      for (
-        let i = event.resultIndex;
-        i < event.results.length;
-        i++
-      ) {
-        if (
-          event.results[i].isFinal
-        ) {
-          newText +=
-            event.results[i][0].transcript;
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        if (event.results[i].isFinal) {
+          newText += event.results[i][0].transcript;
         }
       }
 
       newText = newText.trim();
 
-      if (!newText) {
-        return;
-      }
+      if (!newText) return;
 
-      /*
-       * Prevent Chrome from inserting the same
-       * speech result multiple times.
-       */
-      const normalized =
-        newText
-          .replace(/\s+/g, " ")
-          .trim()
-          .toLowerCase();
+      const normalized = newText.replace(/\s+/g, " ").trim().toLowerCase();
 
-      if (
-        normalized ===
-        lastSpeechTextRef.current
-      ) {
-        return;
-      }
+      if (normalized === lastSpeechTextRef.current) return;
 
-      lastSpeechTextRef.current =
-        normalized;
+      lastSpeechTextRef.current = normalized;
 
       setAnswer((previous) => {
-        const oldText =
-          previous.trim();
+        const oldText = previous.trim();
 
-        if (!oldText) {
-          return newText;
-        }
+        if (!oldText) return newText;
 
-        /*
-         * Avoid duplicate phrases.
-         */
-        if (
-          oldText
-            .toLowerCase()
-            .endsWith(normalized)
-        ) {
-          return oldText;
-        }
+        if (oldText.toLowerCase().endsWith(normalized)) return oldText;
 
         return `${oldText} ${newText}`;
       });
     };
 
     recognition.onerror = (event) => {
-      console.warn(
-        "Speech recognition:",
-        event.error
-      );
+      console.warn("Speech recognition:", event.error);
 
-      if (
-        !shouldListenRef.current
-      ) {
-        return;
-      }
+      if (!shouldListenRef.current) return;
 
-      if (
-        event.error ===
-          "not-allowed"
-      ) {
-        shouldListenRef.current =
-          false;
-
+      if (event.error === "not-allowed") {
+        shouldListenRef.current = false;
         setMicOn(false);
-
         setError(
-          "Microphone permission denied. Please allow microphone access in Chrome."
+          "Microphone permission denied. Please allow microphone access in your browser settings."
         );
       }
     };
 
     recognition.onend = () => {
-      /*
-       * Chrome may automatically stop recognition.
-       * Restart it while the candidate still wants
-       * microphone ON.
-       */
-      if (
-        shouldListenRef.current
-      ) {
+      if (shouldListenRef.current) {
         setTimeout(() => {
-          if (
-            !shouldListenRef.current
-          ) {
-            return;
-          }
+          if (!shouldListenRef.current) return;
 
           try {
             recognition.start();
           } catch {
-            // Recognition may already be running.
+            // Recognition may already be running
           }
         }, 300);
 
@@ -352,12 +295,8 @@ function InterviewUI({ session, candidateId, language, onExit }) {
 
       setMicOn(false);
 
-      if (
-        recognitionRef.current ===
-        recognition
-      ) {
-        recognitionRef.current =
-          null;
+      if (recognitionRef.current === recognition) {
+        recognitionRef.current = null;
       }
     };
 
@@ -365,49 +304,32 @@ function InterviewUI({ session, candidateId, language, onExit }) {
   }
 
   function startMicrophone() {
-    if (micOn) {
-      return;
-    }
+    if (micOn) return;
 
-    shouldListenRef.current =
-      true;
+    shouldListenRef.current = true;
+    lastSpeechTextRef.current = "";
 
-    lastSpeechTextRef.current =
-      "";
-
-    const recognition =
-      createRecognition();
+    const recognition = createRecognition();
 
     if (!recognition) {
-      shouldListenRef.current =
-        false;
-
+      shouldListenRef.current = false;
       return;
     }
 
-    recognitionRef.current =
-      recognition;
+    recognitionRef.current = recognition;
 
     try {
       recognition.start();
-
       setMicOn(true);
     } catch (err) {
-      console.error(
-        "Microphone start:",
-        err
-      );
-
-      shouldListenRef.current =
-        false;
-
+      console.error("Microphone start:", err);
+      shouldListenRef.current = false;
       setMicOn(false);
     }
   }
 
   function stopMicrophone() {
-    shouldListenRef.current =
-      false;
+    shouldListenRef.current = false;
 
     if (recognitionRef.current) {
       try {
@@ -415,12 +337,8 @@ function InterviewUI({ session, candidateId, language, onExit }) {
       } catch {}
     }
 
-    recognitionRef.current =
-      null;
-
-    lastSpeechTextRef.current =
-      "";
-
+    recognitionRef.current = null;
+    lastSpeechTextRef.current = "";
     setMicOn(false);
   }
 
@@ -437,55 +355,24 @@ function InterviewUI({ session, candidateId, language, onExit }) {
   ===================================================== */
 
   function extractEvaluation(response) {
-    if (!response) {
-      return null;
-    }
+    if (!response) return null;
 
-    /*
-     * Most likely structure:
-     *
-     * {
-     *   evaluation: {...}
-     * }
-     */
-    if (
-      response.evaluation &&
-      typeof response.evaluation ===
-        "object"
-    ) {
+    if (response.evaluation && typeof response.evaluation === "object") {
       return response.evaluation;
     }
 
-    /*
-     * Other common backend structures.
-     */
-    if (
-      response.scorecard &&
-      typeof response.scorecard ===
-        "object"
-    ) {
+    if (response.scorecard && typeof response.scorecard === "object") {
       return response.scorecard;
     }
 
-    if (
-      response.result &&
-      typeof response.result ===
-        "object"
-    ) {
+    if (response.result && typeof response.result === "object") {
       return response.result;
     }
 
-    if (
-      response.final_evaluation &&
-      typeof response.final_evaluation ===
-        "object"
-    ) {
+    if (response.final_evaluation && typeof response.final_evaluation === "object") {
       return response.final_evaluation;
     }
 
-    /*
-     * If backend directly returns score fields.
-     */
     if (
       response.score !== undefined ||
       response.overall_score !== undefined ||
@@ -502,141 +389,81 @@ function InterviewUI({ session, candidateId, language, onExit }) {
   ===================================================== */
 
   async function handleSubmit() {
-    const cleanAnswer =
-      answer.trim();
+    const cleanAnswer = answer.trim();
 
-    if (
-      !cleanAnswer ||
-      submitting ||
-      completed
-    ) {
-      return;
-    }
+    if (!cleanAnswer || submitting || completed) return;
 
-    /*
-     * IMPORTANT:
-     *
-     * Do NOT stop microphone here.
-     *
-     * Candidate microphone remains ON until
-     * candidate manually switches it OFF.
-     */
     setSubmitting(true);
     setError("");
 
     try {
       const sessionId =
         session?.session_id ||
-        localStorage.getItem(
-          "interview_session_id"
-        );
+        localStorage.getItem("interview_session_id");
 
       if (!sessionId) {
-        throw new Error(
-          "Interview session not found."
-        );
+        throw new Error("Interview session not found.");
       }
 
-      /*
-       * Clear answer immediately.
-       */
       setAnswer("");
 
-      const response =
-        await submitAnswer(
-          sessionId,
-          cleanAnswer
-        );
+      const response = await submitAnswer(sessionId, cleanAnswer);
 
-      console.log(
-        "ANSWER RESPONSE:",
-        response
-      );
+      console.log("ANSWER RESPONSE:", response);
 
-      /*
-       * Extract evaluation if available.
-       */
-      const receivedEvaluation =
-        extractEvaluation(response);
+      const receivedEvaluation = extractEvaluation(response);
 
       if (receivedEvaluation) {
-        console.log(
-          "EVALUATION RECEIVED:",
-          receivedEvaluation
-        );
-
-        setEvaluation(
-          receivedEvaluation
-        );
+        console.log("EVALUATION RECEIVED:", receivedEvaluation);
+        setEvaluation(receivedEvaluation);
       }
 
-      /*
-       * Determine whether interview is complete.
-       */
       const isCompleted =
         response?.completed === true ||
-        response?.interview_complete ===
-          true ||
-        response?.status ===
-          "completed";
+        response?.interview_complete === true ||
+        response?.status === "completed";
 
       if (isCompleted) {
         setCompleted(true);
 
-        /*
-         * If evaluation came with the response,
-         * show it.
-         */
-        if (receivedEvaluation) {
-          setQuestion(
-            "Interview completed."
-          );
-        } else {
-          setQuestion(
-            "Interview complete. Preparing your evaluation..."
-          );
-        }
+        setQuestion("Interview completed.");
+        setQuestionNumber(totalQuestions);
 
-        setQuestionNumber(
-          totalQuestions
-        );
+        // Call onComplete to navigate to results
+        if (onComplete) {
+          onComplete(receivedEvaluation || response?.scorecard || response);
+        }
 
         return;
       }
 
-      /*
-       * Normal next question.
-       */
+      // Normal next question — animate transition
       const nextQuestion =
         response?.next_question ||
         response?.question ||
         response?.current_question;
 
       if (nextQuestion) {
-        setQuestion(
-          nextQuestion
-        );
+        setQuestionFading(true);
 
-        setQuestionNumber(
-          response?.question_number ||
+        setTimeout(() => {
+          setQuestion(nextQuestion);
+
+          setQuestionNumber(
+            response?.question_number ||
             response?.next_question_number ||
             questionNumber + 1
-        );
+          );
+
+          setQuestionSeconds(0);
+          setQuestionFading(false);
+        }, 250);
       }
-
     } catch (err) {
-      console.error(
-        "Answer submission error:",
-        err
-      );
-
-      setAnswer(
-        cleanAnswer
-      );
-
+      console.error("Answer submission error:", err);
+      setAnswer(cleanAnswer);
       setError(
-        err?.message ||
-          "Failed to submit your answer. Please try again."
+        err?.message || "Failed to submit your answer. Please try again."
       );
     } finally {
       setSubmitting(false);
@@ -644,58 +471,87 @@ function InterviewUI({ session, candidateId, language, onExit }) {
   }
 
   function handleKeyDown(event) {
-    if (
-      event.key === "Enter" &&
-      !event.shiftKey
-    ) {
+    if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
-
       handleSubmit();
     }
   }
 
   /* =====================================================
-     AUTO ENABLE CAMERA
+     AUTO ENABLE CAMERA ON MOUNT
   ===================================================== */
 
   useEffect(() => {
-    /*
-     * Automatically request camera permission
-     * when the interview screen opens.
-     */
     enableCamera();
 
     return () => {
-      shouldListenRef.current =
-        false;
+      shouldListenRef.current = false;
 
       if (streamRef.current) {
         streamRef.current
           .getTracks()
-          .forEach((track) =>
-            track.stop()
-          );
+          .forEach((track) => track.stop());
       }
 
-      if (
-        screenStreamRef.current
-      ) {
+      if (screenStreamRef.current) {
         screenStreamRef.current
           .getTracks()
-          .forEach((track) =>
-            track.stop()
-          );
+          .forEach((track) => track.stop());
       }
 
-      if (
-        recognitionRef.current
-      ) {
+      if (recognitionRef.current) {
         try {
           recognitionRef.current.stop();
         } catch {}
       }
     };
   }, []);
+
+  /* =====================================================
+     TIMERS
+  ===================================================== */
+
+  useEffect(() => {
+    let interval = null;
+    if (!completed) {
+      interval = setInterval(() => {
+        setTotalSeconds(prev => prev + 1);
+        setQuestionSeconds(prev => prev + 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [completed]);
+
+  const formatTime = (secs) => {
+    const m = Math.floor(secs / 60).toString().padStart(2, '0');
+    const s = (secs % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+  };
+
+  /* =====================================================
+     LANGUAGE DISPLAY
+  ===================================================== */
+
+  const LANGUAGE_LABELS = {
+    english: "English",
+    hindi: "हिंदी",
+    hinglish: "Hinglish",
+    spanish: "Español",
+    french: "Français",
+    german: "Deutsch",
+    japanese: "日本語",
+    chinese: "中文",
+    korean: "한국어",
+    arabic: "العربية",
+    portuguese: "Português",
+    russian: "Русский",
+    tamil: "தமிழ்",
+    telugu: "తెలుగు",
+    bengali: "বাংলা",
+  };
+
+  const displayLanguage =
+    LANGUAGE_LABELS[(language || "english").toLowerCase()] || language;
 
   /* =====================================================
      UI
@@ -718,9 +574,18 @@ function InterviewUI({ session, candidateId, language, onExit }) {
             </div>
 
             <div className="interview-question-count">
-              Question{" "}
-              {questionNumber} /{" "}
-              {totalQuestions}
+              Question {questionNumber} / {totalQuestions}
+            </div>
+          </div>
+          
+          <div style={{ marginLeft: "2rem", borderLeft: "1px solid #293750", paddingLeft: "2rem", display: "flex", gap: "1.5rem" }}>
+            <div>
+              <div style={{ fontSize: "0.7rem", color: "#7fa5ff", fontWeight: 600, letterSpacing: "1px" }}>THIS QUESTION</div>
+              <div style={{ fontSize: "1.1rem", color: "#edf3fb", fontWeight: "bold", fontFamily: "monospace" }}>{formatTime(questionSeconds)}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: "0.7rem", color: "#7fa5ff", fontWeight: 600, letterSpacing: "1px" }}>TOTAL TIME</div>
+              <div style={{ fontSize: "1.1rem", color: "#edf3fb", fontWeight: "bold", fontFamily: "monospace" }}>{formatTime(totalSeconds)}</div>
             </div>
           </div>
 
@@ -729,12 +594,7 @@ function InterviewUI({ session, candidateId, language, onExit }) {
         <div className="interview-header-right">
 
           <div className="interview-language">
-            {language === "hindi"
-              ? "हिंदी"
-              : language ===
-                "hinglish"
-              ? "Hinglish"
-              : "English"}
+            {displayLanguage}
           </div>
 
           <button
@@ -780,16 +640,11 @@ function InterviewUI({ session, candidateId, language, onExit }) {
 
             <div
               className={`camera-status ${
-                cameraOn
-                  ? "camera-status-on"
-                  : ""
+                cameraOn ? "camera-status-on" : ""
               }`}
             >
               <span />
-
-              {cameraOn
-                ? "Camera On"
-                : "Camera Off"}
+              {cameraOn ? "Camera On" : "Camera Off"}
             </div>
 
           </div>
@@ -818,9 +673,7 @@ function InterviewUI({ session, candidateId, language, onExit }) {
                 <button
                   type="button"
                   className="enable-camera-button"
-                  onClick={
-                    enableCamera
-                  }
+                  onClick={enableCamera}
                 >
                   Enable Camera
                 </button>
@@ -843,65 +696,40 @@ function InterviewUI({ session, candidateId, language, onExit }) {
             <button
               type="button"
               className={`interview-control ${
-                micOn
-                  ? "control-active"
-                  : ""
+                micOn ? "control-active" : ""
               }`}
-              onClick={
-                toggleMicrophone
-              }
+              onClick={toggleMicrophone}
             >
               <span className="control-icon">
-                {micOn
-                  ? "●"
-                  : "○"}
+                {micOn ? "●" : "○"}
               </span>
-
-              {micOn
-                ? "Microphone On"
-                : "Microphone Off"}
+              {micOn ? "Mic On" : "Mic Off"}
             </button>
 
             <button
               type="button"
               className={`interview-control ${
-                cameraOn
-                  ? "control-active"
-                  : ""
+                cameraOn ? "control-active" : ""
               }`}
-              onClick={
-                toggleCamera
-              }
+              onClick={toggleCamera}
             >
               <span className="control-icon">
-                {cameraOn
-                  ? "●"
-                  : "○"}
+                {cameraOn ? "●" : "○"}
               </span>
-
-              {cameraOn
-                ? "Camera On"
-                : "Camera Off"}
+              {cameraOn ? "Cam On" : "Cam Off"}
             </button>
 
             <button
               type="button"
               className={`interview-control ${
-                screenSharing
-                  ? "control-active"
-                  : ""
+                screenSharing ? "control-active" : ""
               }`}
-              onClick={
-                toggleScreenShare
-              }
+              onClick={toggleScreenShare}
             >
               <span className="control-icon">
                 □
               </span>
-
-              {screenSharing
-                ? "Stop Sharing"
-                : "Share Screen"}
+              {screenSharing ? "Stop Share" : "Share Screen"}
             </button>
 
           </div>
@@ -933,28 +761,21 @@ function InterviewUI({ session, candidateId, language, onExit }) {
 
           <div className="ai-content">
 
-            <div className="ai-question">
+            <div className={`ai-question ${questionFading ? "question-fade-out" : ""}`}>
 
               <div className="ai-question-label">
-
                 <span>AI</span>
-
                 AI AGENT
-
               </div>
 
               <div className="ai-question-text">
 
                 {submitting ? (
                   <div className="question-loading">
-
                     <span />
                     <span />
                     <span />
-
-                    Generating next
-                    question...
-
+                    Generating next question...
                   </div>
                 ) : (
                   question
@@ -964,9 +785,7 @@ function InterviewUI({ session, candidateId, language, onExit }) {
 
             </div>
 
-            {/* =================================================
-                EVALUATION / SCORECARD
-               ================================================= */}
+            {/* EVALUATION / SCORECARD */}
 
             {evaluation && (
               <div className="evaluation-result">
@@ -984,16 +803,11 @@ function InterviewUI({ session, candidateId, language, onExit }) {
                   </div>
 
                   <div className="evaluation-score">
-
                     {evaluation?.score ??
                       evaluation?.overall_score ??
                       evaluation?.total_score ??
                       "--"}
-
-                    <span>
-                      /10
-                    </span>
-
+                    <span>/10</span>
                   </div>
 
                 </div>
@@ -1020,11 +834,8 @@ function InterviewUI({ session, candidateId, language, onExit }) {
 
                 {/* STRENGTHS */}
 
-                {Array.isArray(
-                  evaluation?.strengths
-                ) &&
-                  evaluation.strengths
-                    .length > 0 && (
+                {Array.isArray(evaluation?.strengths) &&
+                  evaluation.strengths.length > 0 && (
                     <div className="evaluation-section">
 
                       <div className="evaluation-label">
@@ -1033,23 +844,13 @@ function InterviewUI({ session, candidateId, language, onExit }) {
 
                       <ul>
                         {evaluation.strengths.map(
-                          (
-                            item,
-                            index
-                          ) => (
-                            <li
-                              key={
-                                index
-                              }
-                            >
-                              {typeof item ===
-                              "string"
+                          (item, index) => (
+                            <li key={index}>
+                              {typeof item === "string"
                                 ? item
                                 : item?.name ||
                                   item?.area ||
-                                  JSON.stringify(
-                                    item
-                                  )}
+                                  JSON.stringify(item)}
                             </li>
                           )
                         )}
@@ -1060,11 +861,8 @@ function InterviewUI({ session, candidateId, language, onExit }) {
 
                 {/* WEAK AREAS */}
 
-                {Array.isArray(
-                  evaluation?.weak_areas
-                ) &&
-                  evaluation.weak_areas
-                    .length > 0 && (
+                {Array.isArray(evaluation?.weak_areas) &&
+                  evaluation.weak_areas.length > 0 && (
                     <div className="evaluation-section">
 
                       <div className="evaluation-label">
@@ -1073,23 +871,13 @@ function InterviewUI({ session, candidateId, language, onExit }) {
 
                       <ul>
                         {evaluation.weak_areas.map(
-                          (
-                            item,
-                            index
-                          ) => (
-                            <li
-                              key={
-                                index
-                              }
-                            >
-                              {typeof item ===
-                              "string"
+                          (item, index) => (
+                            <li key={index}>
+                              {typeof item === "string"
                                 ? item
                                 : item?.name ||
                                   item?.area ||
-                                  JSON.stringify(
-                                    item
-                                  )}
+                                  JSON.stringify(item)}
                             </li>
                           )
                         )}
@@ -1108,9 +896,7 @@ function InterviewUI({ session, candidateId, language, onExit }) {
                     </summary>
 
                     <p>
-                      {
-                        evaluation.ideal_answer
-                      }
+                      {evaluation.ideal_answer}
                     </p>
 
                   </details>
@@ -1125,84 +911,118 @@ function InterviewUI({ session, candidateId, language, onExit }) {
 
           {!completed && (
             <>
-              <div className="answer-container">
+              {session?.mode === "Coding" ? (
+                <div style={{ padding: "0 1.5rem", marginBottom: "1.5rem" }}>
+                  <div style={{ fontSize: "0.85rem", color: "#7fa5ff", marginBottom: "0.5rem", fontWeight: "600", letterSpacing: "1px" }}>CODE EDITOR</div>
+                  <textarea
+                    value={answer}
+                    onChange={(e) => setAnswer(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Tab") {
+                        e.preventDefault();
+                        const start = e.target.selectionStart;
+                        const end = e.target.selectionEnd;
+                        setAnswer(answer.substring(0, start) + "  " + answer.substring(end));
+                        // Set cursor position back slightly delayed
+                        setTimeout(() => {
+                          e.target.selectionStart = e.target.selectionEnd = start + 2;
+                        }, 0);
+                      }
+                      if (e.key === "Enter" && e.shiftKey) {
+                        e.preventDefault();
+                        handleSubmit();
+                      }
+                    }}
+                    style={{
+                      width: "100%",
+                      minHeight: "300px",
+                      backgroundColor: "#050914",
+                      color: "#e2e8f0",
+                      fontFamily: "'Fira Code', 'Courier New', Courier, monospace",
+                      fontSize: "14px",
+                      padding: "1rem",
+                      border: "1px solid #293750",
+                      borderRadius: "8px",
+                      outline: "none",
+                      resize: "vertical",
+                      lineHeight: "1.5",
+                      tabSize: 2
+                    }}
+                    placeholder="// Write your code here...&#10;// Use Tab to indent&#10;// Shift+Enter to submit"
+                    disabled={submitting}
+                    spellCheck="false"
+                  />
+                  <button
+                    type="button"
+                    className="primary-button"
+                    onClick={handleSubmit}
+                    disabled={submitting || !answer.trim()}
+                    style={{ marginTop: "1rem", width: "100%", padding: "1rem", fontSize: "1rem" }}
+                  >
+                    Submit Code →
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <div className="answer-container">
+                    <textarea
+                      value={answer}
+                      onChange={(event) =>
+                        setAnswer(event.target.value)
+                      }
+                      onKeyDown={handleKeyDown}
+                      placeholder={
+                        micOn
+                          ? "Speak your answer or type here..."
+                          : "Type your answer..."
+                      }
+                      disabled={submitting}
+                    />
 
-                <textarea
-                  value={answer}
-                  onChange={(event) =>
-                    setAnswer(
-                      event.target.value
-                    )
-                  }
-                  onKeyDown={
-                    handleKeyDown
-                  }
-                  placeholder={
-                    micOn
-                      ? "Speak your answer or type here..."
-                      : "Type your answer..."
-                  }
-                  disabled={
-                    submitting
-                  }
-                />
+                    <button
+                      type="button"
+                      className="answer-submit"
+                      onClick={handleSubmit}
+                      disabled={submitting || !answer.trim()}
+                    >
+                      →
+                    </button>
+                  </div>
 
-                <button
-                  type="button"
-                  className="answer-submit"
-                  onClick={
-                    handleSubmit
-                  }
-                  disabled={
-                    submitting ||
-                    !answer.trim()
-                  }
-                >
-                  →
-                </button>
+                  <div className="answer-hint">
+                    <span>
+                      Enter to submit
+                    </span>
 
-              </div>
-
-              <div className="answer-hint">
-
-                <span>
-                  Enter to submit
-                </span>
-
-                <span>
-                  {micOn
-                    ? "● Microphone listening"
-                    : "Microphone off"}
-                </span>
-
-              </div>
+                    <span>
+                      {micOn
+                        ? "● Microphone listening"
+                        : "Microphone off"}
+                    </span>
+                  </div>
+                </>
+              )}
             </>
           )}
 
           {/* FINAL EVALUATION MESSAGE */}
 
-          {completed &&
-            !evaluation && (
-              <div className="evaluation-waiting">
+          {completed && !evaluation && (
+            <div className="evaluation-waiting">
 
-                <div className="question-loading">
-
-                  <span />
-                  <span />
-                  <span />
-
-                  Preparing your
-                  evaluation...
-
-                </div>
-
-                <p>
-                  Your interview has
-                  been completed.
-                </p>
-
+              <div className="question-loading">
+                <span />
+                <span />
+                <span />
+                Preparing your evaluation...
               </div>
-            )}
+
+              <p>
+                Your interview has been completed.
+              </p>
+
+            </div>
+          )}
 
         </section>
 

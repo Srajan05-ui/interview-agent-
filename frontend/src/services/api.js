@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://127.0.0.1:8000";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
 
 /**
  * Generic API request helper
@@ -23,7 +23,7 @@ async function request(endpoint, options = {}) {
     });
   } catch (error) {
     throw new Error(
-      "Cannot connect to FastAPI backend. Make sure it is running on http://127.0.0.1:8000"
+      `Cannot connect to backend. Make sure it is running on ${API_BASE_URL}`
     );
   }
 
@@ -225,6 +225,43 @@ export async function uploadResume(file, candidateId) {
 }
 
 /* =========================================================
+   RESUME ATS MAKER
+========================================================= */
+
+export async function improveResume(resumeText) {
+  return await request("/api/resume/improve", {
+    method: "POST",
+    body: JSON.stringify({ resume_text: resumeText }),
+  });
+}
+
+/* =========================================================
+   ROADMAP GENERATOR
+========================================================= */
+
+export async function generateRoadmap(weakAreas) {
+  return await request("/api/roadmap/generate", {
+    method: "POST",
+    body: JSON.stringify({ weak_areas: weakAreas }),
+  });
+}
+
+/* =========================================================
+   HISTORY
+========================================================= */
+
+export async function getInterviewHistory(candidateId) {
+  try {
+    return await request(`/api/interview/history/${encodeURIComponent(candidateId)}`);
+  } catch (error) {
+    if (error.status !== 404) {
+      throw error;
+    }
+    return await request(`/interview/history/${encodeURIComponent(candidateId)}`);
+  }
+}
+
+/* =========================================================
    DEFAULT EXPORT
 ========================================================= */
 
@@ -235,4 +272,7 @@ export default {
   submitAnswer,
   getInterviewPlan,
   uploadResume,
+  improveResume,
+  generateRoadmap,
+  getInterviewHistory,
 };
