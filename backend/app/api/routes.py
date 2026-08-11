@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, UploadFile, File
+from fastapi import APIRouter, HTTPException, UploadFile, File, Depends, Request
 from pydantic import BaseModel
 from typing import Optional
 from uuid import uuid4
@@ -9,7 +9,7 @@ import re
 import requests
 
 from app.core.session_store import InterviewSession, session_store
-
+from app.core.security import get_current_user, limiter
 
 router = APIRouter()
 
@@ -230,7 +230,8 @@ class AnswerRequest(BaseModel):
 # ============================================================
 
 @router.get("/health")
-def health():
+@limiter.limit("5/minute")
+def health(http_request: Request):
     return {
         "status": "ok",
         "service": "AI Cohort Technical Interviewer",
@@ -243,7 +244,8 @@ def health():
 # ============================================================
 
 @router.post("/interview/start")
-def start_interview(request: StartInterviewRequest):
+@limiter.limit("5/minute")
+def start_interview(http_request: Request, request: StartInterviewRequest, user=Depends(get_current_user)):
 
     session_id = str(uuid4())
 
@@ -322,7 +324,8 @@ Return ONLY the question.
 # ============================================================
 
 @router.post("/interview/answer")
-def submit_answer(request: AnswerRequest):
+@limiter.limit("10/minute")
+def submit_answer(http_request: Request, request: AnswerRequest, user=Depends(get_current_user)):
 
     session = session_store.get(request.session_id)
 
@@ -544,7 +547,8 @@ Return ONLY the question.
 # ============================================================
 
 @router.get("/interview/history/{candidate_id}")
-def get_interview_history(candidate_id: str):
+@limiter.limit("10/minute")
+def get_interview_history(http_request: Request, candidate_id: str, user=Depends(get_current_user)):
     sessions = session_store.get_by_candidate(candidate_id)
     history = []
     
@@ -568,8 +572,11 @@ def get_interview_history(candidate_id: str):
 # ============================================================
 
 @router.post("/resume/upload")
+@limiter.limit("5/minute")
 async def upload_resume(
-    file: UploadFile = File(...)
+    http_request: Request,
+    file: UploadFile = File(...),
+    user=Depends(get_current_user)
 ):
 
     filename = file.filename or ""
@@ -760,7 +767,8 @@ class ResumeImproveRequest(BaseModel):
     resume_text: str
 
 @router.post("/resume/improve")
-def improve_resume(request: ResumeImproveRequest):
+@limiter.limit("3/minute")
+def improve_resume(http_request: Request, request: ResumeImproveRequest, user=Depends(get_current_user)):
     prompt = f"""
 You are a professional resume writer and career coach.
 Rewrite the following resume text to make it highly ATS-friendly, professional, and impactful.
@@ -791,7 +799,8 @@ class RoadmapRequest(BaseModel):
     weak_areas: list[str]
 
 @router.post("/roadmap/generate")
-def generate_roadmap(request: RoadmapRequest):
+@limiter.limit("3/minute")
+def generate_roadmap(http_request: Request, request: RoadmapRequest, user=Depends(get_current_user)):
     if not request.weak_areas:
         return {"roadmap": "No weak areas identified. Keep practicing advanced topics!"}
         

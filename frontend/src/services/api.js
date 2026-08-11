@@ -1,3 +1,5 @@
+import { auth } from "../firebase";
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
 
 /**
@@ -7,6 +9,15 @@ async function request(endpoint, options = {}) {
   const url = `${API_BASE_URL}${endpoint}`;
 
   let response;
+  let token = null;
+
+  try {
+    if (auth.currentUser) {
+      token = await auth.currentUser.getIdToken();
+    }
+  } catch (e) {
+    console.error("Failed to get auth token", e);
+  }
 
   try {
     response = await fetch(url, {
@@ -18,6 +29,7 @@ async function request(endpoint, options = {}) {
               "Content-Type": "application/json",
             }),
         Accept: "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...(options.headers || {}),
       },
     });

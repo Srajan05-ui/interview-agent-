@@ -2,3 +2,9 @@ fastapi
 uvicorn
 openai
 python-dotenv
+firebase-admin
+slowapi
+google-cloud-firestore
+python-multipart
+pypdf
+python-docx

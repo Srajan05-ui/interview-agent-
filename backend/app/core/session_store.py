@@ -1,10 +1,8 @@
-import json
 import os
 from dataclasses import dataclass, field, asdict
-from threading import Lock
 from typing import Any
 from datetime import datetime
-
+from google.cloud import firestore
 
 @dataclass
 class InterviewSession:
@@ -29,60 +27,52 @@ class InterviewSession:
 
 
 class SessionStore:
-
     def __init__(self):
-        self._sessions: dict[str, InterviewSession] = {}
-        self._lock = Lock()
-        self._filepath = "sessions.json"
-        self._load()
-
-    def _load(self):
-        if os.path.exists(self._filepath):
-            try:
-                with open(self._filepath, "r", encoding="utf-8") as f:
-                    data = json.load(f)
-                    for k, v in data.items():
-                        self._sessions[k] = InterviewSession(**v)
-            except Exception as e:
-                print(f"Failed to load sessions: {e}")
-
-    def _save(self):
         try:
-            with open(self._filepath, "w", encoding="utf-8") as f:
-                data = {k: asdict(v) for k, v in self._sessions.items()}
-                json.dump(data, f, indent=2)
+            # Requires GOOGLE_APPLICATION_CREDENTIALS to be set in environment
+            self.db = firestore.Client()
         except Exception as e:
-            print(f"Failed to save sessions: {e}")
+            print(f"Failed to initialize Firestore: {e}")
+            self.db = None
+        self.collection_name = "interview_sessions"
 
     def create(self, session: InterviewSession):
-        with self._lock:
-            self._sessions[session.session_id] = session
-            self._save()
+        if not self.db: return
+        doc_ref = self.db.collection(self.collection_name).document(session.session_id)
+        doc_ref.set(asdict(session))
 
     def get(self, session_id: str):
-        with self._lock:
-            return self._sessions.get(session_id)
+        if not self.db: return None
+        doc_ref = self.db.collection(self.collection_name).document(session_id)
+        doc = doc_ref.get()
+        if doc.exists:
+            return InterviewSession(**doc.to_dict())
+        return None
 
     def get_by_candidate(self, candidate_id: str):
-        with self._lock:
-            return [
-                session for session in self._sessions.values()
-                if session.candidate_id == candidate_id and session.completed
-            ]
+        if not self.db: return []
+        query = self.db.collection(self.collection_name).where(
+            filter=firestore.FieldFilter("candidate_id", "==", candidate_id)
+        ).where(
+            filter=firestore.FieldFilter("completed", "==", True)
+        )
+        docs = query.stream()
+        return [InterviewSession(**doc.to_dict()) for doc in docs]
 
     def update(self, session: InterviewSession):
-        with self._lock:
-            self._sessions[session.session_id] = session
-            self._save()
+        if not self.db: return
+        doc_ref = self.db.collection(self.collection_name).document(session.session_id)
+        doc_ref.set(asdict(session))
 
     def delete(self, session_id: str):
-        with self._lock:
-            self._sessions.pop(session_id, None)
-            self._save()
+        if not self.db: return
+        doc_ref = self.db.collection(self.collection_name).document(session_id)
+        doc_ref.delete()
 
     def exists(self, session_id: str):
-        with self._lock:
-            return session_id in self._sessions
+        if not self.db: return False
+        doc_ref = self.db.collection(self.collection_name).document(session_id)
+        return doc_ref.get().exists
 
 
 session_store = SessionStore()
