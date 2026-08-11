@@ -1,7 +1,7 @@
 [build]
-  command = "cd frontend && npm install && npm run build"
+  command = "cd frontend && npm install && npm run build && cd .. && mkdir -p netlify/functions/api && cp -r backend/* netlify/functions/api/ && mv netlify/functions/api/api.py netlify/functions/api/main.py"
   publish = "frontend/dist"
-  functions = "backend"
+  functions = "netlify/functions"
 
 [build.environment]
   NODE_VERSION = "20"
