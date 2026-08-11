@@ -12,7 +12,13 @@ limiter = Limiter(key_func=get_remote_address)
 try:
     if not firebase_admin._apps:
         service_account_path = os.getenv("FIREBASE_SERVICE_ACCOUNT_PATH")
-        if service_account_path and os.path.exists(service_account_path):
+        service_account_json = os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON")
+        
+        if service_account_json:
+            cred_dict = json.loads(service_account_json)
+            cred = credentials.Certificate(cred_dict)
+            firebase_admin.initialize_app(cred)
+        elif service_account_path and os.path.exists(service_account_path):
             cred = credentials.Certificate(service_account_path)
             firebase_admin.initialize_app(cred)
         else:

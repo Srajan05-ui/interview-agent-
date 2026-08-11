@@ -29,8 +29,16 @@ class InterviewSession:
 class SessionStore:
     def __init__(self):
         try:
-            # Requires GOOGLE_APPLICATION_CREDENTIALS to be set in environment
-            self.db = firestore.Client()
+            import json
+            from google.oauth2 import service_account
+            service_account_json = os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON")
+            if service_account_json:
+                cred_dict = json.loads(service_account_json)
+                creds = service_account.Credentials.from_service_account_info(cred_dict)
+                self.db = firestore.Client(credentials=creds, project=cred_dict.get("project_id"))
+            else:
+                # Fallback to Application Default Credentials
+                self.db = firestore.Client()
         except Exception as e:
             print(f"Failed to initialize Firestore: {e}")
             self.db = None
