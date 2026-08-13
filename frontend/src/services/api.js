@@ -72,7 +72,7 @@ async function request(endpoint, options = {}) {
 ========================================================= */
 
 export async function checkHealth() {
-  return request("/health");
+  return request("/api/health");
 }
 
 /* =========================================================

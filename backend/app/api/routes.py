@@ -231,7 +231,7 @@ class AnswerRequest(BaseModel):
 
 @router.get("/health")
 @limiter.limit("5/minute")
-def health(http_request: Request):
+def health(request: Request):
     return {
         "status": "ok",
         "service": "AI Cohort Technical Interviewer",
@@ -245,30 +245,30 @@ def health(http_request: Request):
 
 @router.post("/interview/start")
 @limiter.limit("5/minute")
-def start_interview(http_request: Request, request: StartInterviewRequest, user=Depends(get_current_user)):
+def start_interview(request: Request, payload: StartInterviewRequest, user=Depends(get_current_user)):
 
     session_id = str(uuid4())
 
-    skills = request.skills or []
+    skills = payload.skills or []
 
     skill_text = ", ".join(skills)
 
-    resume_context = f"\nCandidate Resume:\n{request.resume_text[:2000]}\n" if request.resume_text else ""
+    resume_context = f"\nCandidate Resume:\n{payload.resume_text[:2000]}\n" if payload.resume_text else ""
 
     mode_instruction = ""
-    if request.mode == "Coding":
+    if payload.mode == "Coding":
         mode_instruction = "Generate the first coding interview question. Based strictly on the technologies and skills listed in the candidate's resume, ask a practical coding problem, data structure, or algorithm question where they must write or analyze code. Do not ask simple theoretical questions."
     else:
         mode_instruction = "Generate the first technical interview question. Focus on system design, advanced concepts, or deep theoretical knowledge directly related to the specific skills and experience listed in their resume."
 
-    skill_display = skill_text if skill_text else ("Extract from resume below" if request.resume_text else "General software engineering")
+    skill_display = skill_text if skill_text else ("Extract from resume below" if payload.resume_text else "General software engineering")
 
     prompt = f"""
 You are an AI technical interviewer.
 
-{language_instruction(request.language)}
+{language_instruction(payload.language)}
 
-{persona_instruction(request.persona)}
+{persona_instruction(payload.persona)}
 
 Candidate skills:
 {skill_display}
@@ -284,19 +284,19 @@ Return ONLY the question.
     question = call_ollama(prompt)
 
     if not question:
-        if request.mode == "Coding":
+        if payload.mode == "Coding":
             question = DEFAULT_CODING_QUESTIONS[0]
         else:
             question = DEFAULT_TECHNICAL_QUESTIONS[0]
 
     session = InterviewSession(
         session_id=session_id,
-        candidate_id=request.candidate_id,
-        language=request.language,
-        mode=request.mode,
-        persona=request.persona,
+        candidate_id=payload.candidate_id,
+        language=payload.language,
+        mode=payload.mode,
+        persona=payload.persona,
         current_question=question,
-        resume_text=request.resume_text,
+        resume_text=payload.resume_text,
         skills=skills,
     )
 
@@ -309,10 +309,10 @@ Return ONLY the question.
 
     return {
         "session_id": session_id,
-        "candidate_id": request.candidate_id,
-        "language": request.language,
-        "mode": request.mode,
-        "persona": request.persona,
+        "candidate_id": payload.candidate_id,
+        "language": payload.language,
+        "mode": payload.mode,
+        "persona": payload.persona,
         "question_number": 1,
         "total_questions": 10,
         "question": question,
@@ -325,9 +325,9 @@ Return ONLY the question.
 
 @router.post("/interview/answer")
 @limiter.limit("10/minute")
-def submit_answer(http_request: Request, request: AnswerRequest, user=Depends(get_current_user)):
+def submit_answer(request: Request, payload: AnswerRequest, user=Depends(get_current_user)):
 
-    session = session_store.get(request.session_id)
+    session = session_store.get(payload.session_id)
 
     if not session:
         raise HTTPException(
@@ -346,7 +346,7 @@ Question:
 {question}
 
 Candidate answer:
-{request.answer}
+{payload.answer}
 
 Evaluate the answer.
 
@@ -390,14 +390,14 @@ The ideal_answer must answer the EXACT question asked.
 
     if not evaluation:
         evaluation = fallback_evaluation(
-            request.answer,
+            payload.answer,
             question
         )
 
     session.answers.append({
         "question": question,
-        "answer": request.answer,
-        "self_diagnosis": request.self_diagnosis or "",
+        "answer": payload.answer,
+        "self_diagnosis": payload.self_diagnosis or "",
     })
 
     session.evaluations.append(evaluation)
@@ -500,7 +500,7 @@ Previously asked questions (DO NOT REPEAT THESE):
 {previous_questions}
 
 Candidate's last answer to the immediately previous question ({question}):
-{request.answer}
+{payload.answer}
 
 {mode_instruction}
 
@@ -548,7 +548,7 @@ Return ONLY the question.
 
 @router.get("/interview/history/{candidate_id}")
 @limiter.limit("10/minute")
-def get_interview_history(http_request: Request, candidate_id: str, user=Depends(get_current_user)):
+def get_interview_history(request: Request, candidate_id: str, user=Depends(get_current_user)):
     sessions = session_store.get_by_candidate(candidate_id)
     history = []
     
@@ -574,7 +574,7 @@ def get_interview_history(http_request: Request, candidate_id: str, user=Depends
 @router.post("/resume/upload")
 @limiter.limit("5/minute")
 async def upload_resume(
-    http_request: Request,
+    request: Request,
     file: UploadFile = File(...),
     user=Depends(get_current_user)
 ):
@@ -768,7 +768,7 @@ class ResumeImproveRequest(BaseModel):
 
 @router.post("/resume/improve")
 @limiter.limit("3/minute")
-def improve_resume(http_request: Request, request: ResumeImproveRequest, user=Depends(get_current_user)):
+def improve_resume(request: Request, payload: ResumeImproveRequest, user=Depends(get_current_user)):
     prompt = f"""
 You are a professional resume writer and career coach.
 Rewrite the following resume text to make it highly ATS-friendly, professional, and impactful.
@@ -777,7 +777,7 @@ Do NOT hallucinate fake experience. Only improve the phrasing of what is provide
 Format the output nicely using Markdown.
 
 Original Resume:
-{request.resume_text[:12000]}
+{payload.resume_text[:12000]}
 
 Return the improved resume in Markdown format.
 """
@@ -800,11 +800,11 @@ class RoadmapRequest(BaseModel):
 
 @router.post("/roadmap/generate")
 @limiter.limit("3/minute")
-def generate_roadmap(http_request: Request, request: RoadmapRequest, user=Depends(get_current_user)):
-    if not request.weak_areas:
+def generate_roadmap(request: Request, payload: RoadmapRequest, user=Depends(get_current_user)):
+    if not payload.weak_areas:
         return {"roadmap": "No weak areas identified. Keep practicing advanced topics!"}
         
-    weaknesses = ", ".join(request.weak_areas)
+    weaknesses = ", ".join(payload.weak_areas)
     
     prompt = f"""
 You are a senior engineering manager mentoring a candidate.

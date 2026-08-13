@@ -108,19 +108,28 @@ export default function LoginPage() {
       <div className="login-glow login-glow-two"></div>
       <div className="login-glow login-glow-three"></div>
 
+      {/* Floating particles */}
+      <div className="particles-container">
+        <div className="particle"></div>
+        <div className="particle"></div>
+        <div className="particle"></div>
+        <div className="particle"></div>
+        <div className="particle"></div>
+      </div>
+
       {/* Login card */}
-      <div className="login-card">
+      <div className="login-card glass-card">
 
         {/* Brand */}
         <div className="login-brand">
 
           <div className="login-brand-mark">
-            AI
+            IA
           </div>
 
           <div className="login-brand-text">
             <div className="login-brand-name">
-              Interview Agent
+              Interview Acer
             </div>
 
             <div className="login-brand-subtitle">

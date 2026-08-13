@@ -131,7 +131,7 @@ function ResultDashboard({
         <section className="results-header">
 
           <div className="results-badge">
-            INTERVIEW COMPLETED
+            INTERVIEW ACER — COMPLETED
           </div>
 
           <h1>

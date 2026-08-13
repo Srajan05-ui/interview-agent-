@@ -570,7 +570,7 @@ function InterviewUI({ interviewData, onExit, onComplete }) {
 
           <div>
             <div className="interview-status-title">
-              INTERVIEW IN PROGRESS
+              INTERVIEW ACER — IN PROGRESS
             </div>
 
             <div className="interview-question-count">

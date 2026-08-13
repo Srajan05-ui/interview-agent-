@@ -209,7 +209,7 @@ function CandidateSetup({ onStart, onBack }) {
       <section className="setup-hero">
 
         <div className="setup-badge">
-          AI COHORT INTERVIEW
+          INTERVIEW ACER
         </div>
 
         <h1>

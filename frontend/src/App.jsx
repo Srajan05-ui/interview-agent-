@@ -117,17 +117,29 @@ function App() {
       <div className="landing-glow landing-glow-one"></div>
       <div className="landing-glow landing-glow-two"></div>
 
+      {/* Floating particles */}
+      <div className="particles-container">
+        <div className="particle"></div>
+        <div className="particle"></div>
+        <div className="particle"></div>
+        <div className="particle"></div>
+        <div className="particle"></div>
+        <div className="particle"></div>
+        <div className="particle"></div>
+        <div className="particle"></div>
+      </div>
+
       {/* Header */}
       <header className="landing-header">
 
         <div className="brand">
           <div className="brand-mark">
-            AI
+            IA
           </div>
 
           <div>
             <div className="brand-name">
-              Interview Agent
+              Interview Acer
             </div>
 
             <div className="brand-subtitle">
@@ -174,11 +186,11 @@ function App() {
       <main className="landing-content">
 
         <div className="landing-eyebrow">
-          AI COHORT INTERVIEW
+          AI-POWERED INTERVIEW PLATFORM
         </div>
 
-        <h1>
-          Prepare for your
+        <h1 className="landing-title-shimmer">
+          Ace your next
           <br />
           <span>technical interview.</span>
         </h1>
@@ -193,9 +205,9 @@ function App() {
 
         <div className="landing-features">
 
-          <div className="landing-feature">
+          <div className="landing-feature glass-card">
             <div className="feature-icon">
-              AI
+              🤖
             </div>
 
             <div>
@@ -206,9 +218,9 @@ function App() {
             </div>
           </div>
 
-          <div className="landing-feature">
+          <div className="landing-feature glass-card">
             <div className="feature-icon">
-              CV
+              📄
             </div>
 
             <div>
@@ -219,9 +231,9 @@ function App() {
             </div>
           </div>
 
-          <div className="landing-feature">
+          <div className="landing-feature glass-card">
             <div className="feature-icon">
-              ✓
+              📊
             </div>
 
             <div>
@@ -237,7 +249,7 @@ function App() {
         {/* Start */}
 
         <button
-          className="landing-start-button"
+          className="landing-start-button glow-button"
           onClick={() => setScreen("setup")}
         >
           <span>Configure Interview</span>
@@ -253,7 +265,7 @@ function App() {
       {/* Footer */}
 
       <footer className="landing-footer">
-        <span>AI Interview Agent</span>
+        <span>Interview Acer</span>
         <span>•</span>
         <span>Personalized Technical Interview Platform</span>
       </footer>
