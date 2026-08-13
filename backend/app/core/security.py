@@ -1,5 +1,11 @@
 import os
 import json
+from typing import Optional
+from dotenv import load_dotenv
+
+# Load environment variables early
+load_dotenv()
+
 from fastapi import Request, HTTPException, Security
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from slowapi import Limiter
@@ -59,7 +65,7 @@ security = HTTPBearer(auto_error=not DEV_MODE)
 
 
 def get_current_user(
-    creds: HTTPAuthorizationCredentials = Security(security),
+    creds: Optional[HTTPAuthorizationCredentials] = Security(security),
 ):
     # ---------------------------------------------------------
     # DEV MODE: return a mock user
