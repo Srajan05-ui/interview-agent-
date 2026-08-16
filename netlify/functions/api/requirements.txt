@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+openai
+python-dotenv
+firebase-admin
+slowapi
+google-cloud-firestore
+google-auth
+python-multipart
+pypdf
+python-docx
+mangum
+requests
