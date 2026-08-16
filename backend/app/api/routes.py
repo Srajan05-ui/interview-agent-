@@ -558,7 +558,7 @@ def get_interview_history(request: Request, candidate_id: str, user=Depends(get_
         
         history.append({
             "session_id": session.session_id,
-            "date": datetime.now().strftime("%d %B %Y"), # Since we don't have a created_at field, we mock it or we could add it to session. For now, use current date or add a timestamp to SessionStore. Let's just return a placeholder date or add a field if necessary. Better yet, we can just omit or mock.
+            "date": session.created_at,
             "mode": session.mode,
             "language": session.language,
             "overall_score": overall
